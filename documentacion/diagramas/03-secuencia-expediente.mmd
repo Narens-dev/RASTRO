@@ -1,0 +1,50 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'actorBkg': '#046A38', 'actorTextColor': '#ffffff', 'fontFamily': 'Helvetica'}}}%%
+sequenceDiagram
+    actor U as Usuario
+    participant FE as Next.js (web/)
+    participant API as API Express (/api)
+    participant SRCH as search.js
+    participant SE as scoreEngine.js
+    participant DS as dataSource.js (caché + fallback)
+    participant CR as Croma (MCP)
+    participant MK as MockAdapter
+
+    U->>FE: Escribe NIT/cédula/nombre y busca
+    FE->>API: GET /api/search?q=...
+    API->>SRCH: search(source, q)
+    SRCH->>DS: ruesByNit(doc) / ruesByName(nombre)
+    DS->>CR: llamada MCP real
+    alt Croma responde
+        CR-->>DS: resultado
+    else Croma falla o rate-limit
+        DS->>MK: respaldo automático
+        MK-->>DS: resultado simulado
+    end
+    DS-->>SRCH: candidato(s)
+    SRCH-->>API: { queryType, candidates }
+    API-->>FE: candidatos
+    FE-->>U: Navega a /expediente?doc=...&docType=...
+
+    U->>FE: Abre /expediente
+    FE->>API: GET /api/entity/:docType/:doc
+    API->>SE: buildExpediente(source, doc, docType, name)
+    par 6 fuentes en paralelo
+        SE->>DS: ruesByNit
+        SE->>DS: secopSanctionsByProvider
+        SE->>DS: procuraduriaRecords
+        SE->>DS: contraloriaFiscalRecords
+        SE->>DS: ramaJudicialByEntity
+        SE->>DS: contaduriaDelinquentDebtor
+    end
+    DS-->>SE: evidencia cruda por fuente
+    SE->>SE: Clasifica cada fuente en Alto / Sin hallazgo / Limpio (nunca combina en un score)
+    SE-->>API: Expediente { evidence[], counts, contractHistory }
+    API-->>FE: Expediente
+    FE-->>U: Ficha de riesgo con niveles de evidencia
+
+    opt Resumen con IA (asíncrono, no bloquea la carga)
+        FE->>API: GET /api/entity/:docType/:doc/summary
+        API->>API: summarizeExpediente(expediente) vía Claude
+        API-->>FE: { available, text }
+        FE-->>U: Tarjeta "Resumen ejecutivo — IA" (se oculta si no hay ANTHROPIC_API_KEY)
+    end

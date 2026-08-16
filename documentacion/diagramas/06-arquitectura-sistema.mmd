@@ -1,0 +1,51 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'fontFamily': 'Helvetica'}}}%%
+flowchart TB
+    Browser(["Navegador del usuario"])
+
+    subgraph Frontend["web/ — Next.js 16 (puerto 3100)"]
+        Pages["Server Components\n(páginas públicas)"]
+        ApiRoutes["app/api/** \n(route handlers — proxy + validación zod)"]
+    end
+
+    subgraph Backend["Express — API pura (puerto 3000)"]
+        Router["src/routes/api.js"]
+        Services["Servicios de negocio\n(scoreEngine, opportunities,\nconcentration, contractTracking,\nbackgroundCheck, companies...)"]
+        DS["dataSource.js\n(caché 10min + fallback automático)"]
+    end
+
+    subgraph Ports["Puertos (interfaces)"]
+        GDS["GovDataSource"]
+        EP["EmailPort"]
+        WP["WhatsAppPort"]
+    end
+
+    subgraph Adapters["Adaptadores"]
+        Croma["CromaAdapter\n(MCP real)"]
+        Mock["MockAdapter\n(respaldo)"]
+        MailMock["MockEmailAdapter"]
+        WaMock["MockWhatsAppAdapter"]
+    end
+
+    CromaAPI[("Croma\nSECOP · RUES · Rama Judicial\nProcuraduría · Contraloría · Contaduría\nADRES · SIMIT · Policía")]
+    Claude[("Anthropic Claude\n(resumen ejecutivo, opcional)")]
+    Store[("data/*.json\nempresas · outbox · vistas")]
+
+    Browser -->|HTTPS| Pages
+    Browser -->|fetch same-origin| ApiRoutes
+    ApiRoutes -->|Authorization: Bearer| Router
+    Router --> Services
+    Services --> DS
+    DS --> GDS
+    Services --> EP
+    Services --> WP
+    GDS --- Croma
+    GDS --- Mock
+    EP --- MailMock
+    WP --- WaMock
+    Croma -->|MCP over HTTPS| CromaAPI
+    Services -.resumen opcional.-> Claude
+    Services --> Store
+
+    style CromaAPI fill:#046A38,color:#ffffff
+    style Claude fill:#C9A227,color:#14110F
+    style Store fill:#F0EEE9

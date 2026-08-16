@@ -1,0 +1,35 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'actorBkg': '#046A38', 'actorTextColor': '#ffffff', 'fontFamily': 'Helvetica'}}}%%
+sequenceDiagram
+    participant CRON as setInterval (server.js, cada 15 min)
+    participant NOT as notifications.js
+    participant OPP as opportunities.js
+    participant DS as dataSource.js
+    participant CR as Croma (SECOP)
+    participant DB as data/seen_opportunities.json
+    participant COMP as companies.js
+    participant MAIL as EmailPort (mock)
+    actor E as Empresa suscrita
+
+    CRON->>NOT: pollNewOpportunities(source, emailAdapter)
+    NOT->>OPP: listOpportunities(source) sobre entidades semilla
+    OPP->>DS: secopProcessesByEntity(nit) por cada entidad
+    DS->>CR: consulta SECOP
+    CR-->>DS: procesos activos
+    DS-->>OPP: licitaciones abiertas + ganadores anteriores
+    OPP-->>NOT: lista de oportunidades activas
+
+    NOT->>DB: compara contra oportunidades ya notificadas
+    DB-->>NOT: nuevas (no vistas antes)
+
+    loop por cada oportunidad nueva
+        NOT->>COMP: subscribersMatching({ sector, ubicación })
+        COMP-->>NOT: empresas con alerta activa que calzan
+        loop por cada empresa suscrita
+            NOT->>MAIL: send(alerta de nueva licitación)
+            MAIL-->>NOT: enviado (mock: registrado en outbox_emails.json)
+        end
+        NOT->>DB: marca oportunidad como vista
+    end
+
+    E->>COMP: GET /api/companies/me/notifications
+    COMP-->>E: historial de alertas enviadas a su correo

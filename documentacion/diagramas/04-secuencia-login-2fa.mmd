@@ -1,0 +1,42 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'actorBkg': '#046A38', 'actorTextColor': '#ffffff', 'fontFamily': 'Helvetica'}}}%%
+sequenceDiagram
+    actor U as Empresa
+    participant FE as Next.js /empresas/login
+    participant API as API Express
+    participant SVC as companies.js
+    participant MAIL as EmailPort (mock)
+    participant DB as data/companies.json
+
+    U->>FE: Ingresa correo + contraseña
+    FE->>API: POST /api/companies/login
+    API->>SVC: beginLogin(emailAdapter, credenciales)
+    SVC->>DB: valida bcrypt(password) contra passwordHash
+    alt credenciales inválidas
+        SVC-->>API: { ok:false, error }
+        API-->>FE: 401
+        FE-->>U: "Correo o contraseña incorrectos"
+    else credenciales válidas
+        SVC->>SVC: genera código de 6 dígitos + expiración 10 min
+        SVC->>DB: guarda loginPending { code, expiresAt }
+        SVC->>MAIL: send(código de verificación)
+        MAIL-->>SVC: enviado (mock: registrado en outbox_emails.json)
+        SVC-->>API: { ok:true, email, devCode? }
+        API-->>FE: 200 (sin token todavía)
+        FE-->>U: Pantalla "Verifica tu identidad" + código en modo demo
+    end
+
+    U->>FE: Ingresa código de 6 dígitos
+    FE->>API: POST /api/companies/login/verify
+    API->>SVC: completeLogin({ email, code })
+    SVC->>DB: compara con loginPending.code y expiresAt
+    alt código correcto y vigente
+        SVC->>DB: limpia loginPending
+        SVC-->>API: { ok:true, company, token(JWT) }
+        API-->>FE: 200
+        FE->>FE: setAuthCookie(token) — httpOnly
+        FE-->>U: Redirige a /empresas/panel
+    else código incorrecto o vencido
+        SVC-->>API: { ok:false, error }
+        API-->>FE: 401
+        FE-->>U: "Código incorrecto" / "El código venció"
+    end

@@ -1,0 +1,42 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'fontFamily': 'Helvetica'}}}%%
+flowchart LR
+    subgraph Actores[" "]
+        direction TB
+        A1(["Ciudadano / Periodista / Veeduría"])
+        A2(["Pyme"])
+        A3(["Empresa verificada"])
+        A4(["Estado (rol interno)"])
+    end
+
+    subgraph CU_Transparencia["Modo Transparencia (público)"]
+        UC1(["Buscar NIT / cédula / nombre"])
+        UC2(["Ver expediente de riesgo por niveles de evidencia"])
+        UC3(["Consultar seguimiento de un contrato"])
+        UC4(["Ver resumen ejecutivo generado por IA"])
+    end
+
+    subgraph CU_Oportunidad["Modo Oportunidad (público + suscripción)"]
+        UC5(["Explorar licitaciones activas de SECOP"])
+        UC6(["Filtrar por sector, ubicación y valor"])
+        UC7(["Ver ganadores anteriores de procesos similares"])
+        UC8(["Ver concentración de contratistas por entidad"])
+        UC9(["Suscribirse a alertas por sector/ubicación"])
+    end
+
+    subgraph CU_Empresas["Apartado Empresas (autenticado)"]
+        UC10(["Registrar cuenta de empresa (verificada por NIT en RUES)"])
+        UC11(["Iniciar sesión en dos pasos (código por correo)"])
+        UC12(["Verificar número de WhatsApp"])
+        UC13(["Consultar estudio de seguridad por cédula"])
+        UC14(["Recibir alertas de oportunidad por correo"])
+    end
+
+    A1 --> UC1 --> UC2
+    A1 --> UC3 --> UC4
+    A2 --> UC5 --> UC6 --> UC7
+    A2 --> UC8
+    A2 -.suscripción.-> UC9
+    A3 --> UC10 --> UC11 --> UC12
+    A3 --> UC13
+    A3 --> UC14
+    A4 -. mismos casos de Transparencia .-> UC1

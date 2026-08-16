@@ -1,0 +1,159 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'fontFamily': 'Helvetica'}}}%%
+classDiagram
+    class GovDataSource {
+        <<port / interfaz>>
+        +ruesByNit(doc) RuesResult
+        +ruesByName(name, page) RuesSearchResult
+        +secopProcessesByEntity(nit, opts) ProcessList
+        +secopProcess(noticeUid) ProcessDetail
+        +secopContract(contractId) ContractDetail
+        +secopContractsByProvider(doc, opts) ContractList
+        +secopSanctionsByProvider(doc) SanctionList
+        +procuraduriaRecords(doc, docType) Records
+        +contraloriaFiscalRecords(doc, docType) FiscalRecord
+        +ramaJudicialByEntity(name, type) CaseList
+        +contaduriaDelinquentDebtor(doc, docType) DebtorStatus
+        +policiaCriminalRecords(doc, docType) Records
+        +adresAffiliation(doc, docType) Affiliation
+        +simitAccountStatus(doc) FineStatus
+    }
+
+    class CromaAdapter {
+        -mcpUrl string
+        -apiKey string
+        -client MCPClient
+        +_call(tool, args) Promise
+        +_pollJob(statusUrl) Promise
+    }
+
+    class MockAdapter {
+        -fixtures ENTITIES, OPPORTUNITIES, CONTRACTS
+    }
+
+    GovDataSource <|-- CromaAdapter
+    GovDataSource <|-- MockAdapter
+
+    class DataSource {
+        <<composition root>>
+        +mode string
+        +degraded bool
+        -primary GovDataSource
+        -fallback GovDataSource
+        -cache MemoryCache
+        +wrap(method) any
+    }
+    DataSource o-- GovDataSource : primary/fallback
+    DataSource *-- MemoryCache
+
+    class MemoryCache {
+        -store Map
+        -ttlMs number
+        +get(ns, args)
+        +set(ns, args, value)
+        +wrap(ns, args, fn)
+    }
+
+    class EmailPort {
+        <<port / interfaz>>
+        +send(payload) Result
+    }
+    class MockEmailAdapter
+    EmailPort <|-- MockEmailAdapter
+
+    class WhatsAppPort {
+        <<port / interfaz>>
+        +send(payload) Result
+    }
+    class MockWhatsAppAdapter
+    WhatsAppPort <|-- MockWhatsAppAdapter
+
+    class ScoreEngine {
+        <<service>>
+        +buildExpediente(source, doc, docType, name) Expediente
+    }
+    class BackgroundCheck {
+        <<service>>
+        +buildPersonaDossier(source, doc, docType, name) PersonaDossier
+    }
+    class Concentration {
+        <<service>>
+        +buildConcentration(source, nit, opts) ConcentrationReport
+    }
+    class ContractTracking {
+        <<service>>
+        +buildContractTracking(source, contractId) ContractTracking
+    }
+    class Opportunities {
+        <<service>>
+        +listOpportunities(source, filters) OpportunityList
+    }
+    class Companies {
+        <<service>>
+        +registerCompany(source, data) Result
+        +beginLogin(emailAdapter, creds) Result
+        +completeLogin(creds) Result
+        +requestWhatsAppCode(waAdapter, id, phone) Result
+        +verifyWhatsAppCode(id, code) Result
+        +updateSubscription(id, prefs) Company
+    }
+    class AiSummary {
+        <<service>>
+        +summarizeExpediente(dossier) Summary
+    }
+
+    ScoreEngine ..> DataSource : usa
+    BackgroundCheck ..> DataSource : usa
+    Concentration ..> DataSource : usa
+    ContractTracking ..> DataSource : usa
+    Opportunities ..> DataSource : usa
+    Companies ..> DataSource : usa
+    Companies ..> EmailPort : usa
+    Companies ..> WhatsAppPort : usa
+    AiSummary ..> ScoreEngine : narra
+
+    class Company {
+        +id string
+        +nit string
+        +name string
+        +email string
+        +passwordHash string
+        +role "empresa"|"estado"
+        +subscription Subscription
+        +whatsapp WhatsAppStatus
+        +createdAt string
+    }
+    class Subscription {
+        +active bool
+        +sector string
+        +location string
+    }
+    class EvidenceItem {
+        +source string
+        +level "alto"|"sin_hallazgo"|"limpio"
+        +summary string
+        +date string
+    }
+    class Expediente {
+        +doc string
+        +docType string
+        +name string
+        +evidence EvidenceItem[]
+        +counts Counts
+        +contractHistory Contract[]
+    }
+    Expediente "1" *-- "*" EvidenceItem
+    Company "1" -- "1" Subscription
+
+    class AlignmentSignal {
+        +status "alineado"|"adelantado"|"alerta_atraso"|"sin_datos"
+        +label string
+        +timeElapsedPct number
+        +paidPct number
+        +physicalProgressPct number
+    }
+    class ContractTrackingResult {
+        +contract ContractDetail
+        +alignment AlignmentSignal
+        +timeline TimelineEvent[]
+    }
+    ContractTrackingResult *-- AlignmentSignal
