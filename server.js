@@ -3,6 +3,7 @@ import express from "express";
 import { buildDataSource } from "./src/dataSource.js";
 import { buildApiRouter } from "./src/routes/api.js";
 import { buildEmailAdapter } from "./src/adapters/email/index.js";
+import { buildWhatsAppAdapter } from "./src/adapters/whatsapp/index.js";
 import { pollNewOpportunities } from "./src/services/notifications.js";
 
 // API pura — el frontend activo es web/ (Next.js, puerto 3100), que consume
@@ -10,9 +11,10 @@ import { pollNewOpportunities } from "./src/services/notifications.js";
 const app = express();
 const source = buildDataSource();
 const emailAdapter = buildEmailAdapter();
+const whatsappAdapter = buildWhatsAppAdapter();
 
 app.use(express.json());
-app.use("/api", buildApiRouter(source, emailAdapter));
+app.use("/api", buildApiRouter(source, emailAdapter, whatsappAdapter));
 
 app.use((req, res) => {
   res.status(404).json({ error: "not_found" });

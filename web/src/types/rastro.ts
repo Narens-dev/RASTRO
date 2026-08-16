@@ -185,6 +185,11 @@ export interface CompanySubscription {
   location: string;
 }
 
+export interface CompanyWhatsApp {
+  number: string;
+  verifiedAt: string;
+}
+
 export interface Company {
   id: string;
   nit: string;
@@ -192,6 +197,7 @@ export interface Company {
   email: string;
   role: "empresa" | "estado";
   subscription: CompanySubscription;
+  whatsapp?: CompanyWhatsApp | null;
   createdAt: string;
 }
 

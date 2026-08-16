@@ -8,6 +8,7 @@ import type { Company, OpportunityNotification } from "@/types/rastro";
 import { SubscriptionForm } from "./subscription-form";
 import { PersonaSearch } from "./persona-search";
 import { LogoutButton } from "./logout-button";
+import { WhatsAppVerification } from "./whatsapp-verification";
 
 function formatDate(iso: string) {
   try {
@@ -18,9 +19,9 @@ function formatDate(iso: string) {
 }
 
 const SIDEBAR_LINKS = [
-  { icon: "dashboard", label: "Panel Principal", active: true },
-  { icon: "notifications_active", label: "Mis Alertas", active: false },
-  { icon: "shield_person", label: "Estudios de Seguridad", active: false },
+  { icon: "dashboard", label: "Panel Principal", href: "#" },
+  { icon: "notifications_active", label: "Mis Alertas", href: "#alertas" },
+  { icon: "shield_person", label: "Estudios de Seguridad", href: "#estudio-seguridad" },
 ];
 
 /** Panel de empresa — literal port of the Stitch mockup's sidebar + bento grid. Server Component: resuelve sesión + datos server-side, deja la interacción a los leaves. */
@@ -55,12 +56,8 @@ export const PanelView = async () => {
           {SIDEBAR_LINKS.map((link) => (
             <a
               key={link.label}
-              href="#"
-              className={`mx-2 flex items-center gap-3 rounded-lg p-3 transition-all ${
-                link.active
-                  ? "bg-secondary-container font-semibold text-on-secondary-container"
-                  : "text-on-surface-variant hover:bg-surface-variant"
-              }`}
+              href={link.href}
+              className="mx-2 flex items-center gap-3 rounded-lg p-3 text-on-surface-variant transition-all hover:bg-surface-variant"
             >
               <span className="material-symbols-outlined">{link.icon}</span>
               {link.label}
@@ -77,11 +74,11 @@ export const PanelView = async () => {
           </a>
         </div>
         <div className="mt-8 flex flex-col gap-2 border-t border-outline-variant px-4 pt-4">
-          <a href="#" className="mx-2 flex items-center gap-3 rounded-lg p-2 text-sm text-on-surface-variant transition-all hover:bg-surface-variant">
+          <a href="#configuracion" className="mx-2 flex items-center gap-3 rounded-lg p-2 text-sm text-on-surface-variant transition-all hover:bg-surface-variant">
             <span className="material-symbols-outlined text-sm">settings</span>
             Configuración
           </a>
-          <a href="#" className="mx-2 flex items-center gap-3 rounded-lg p-2 text-sm text-on-surface-variant transition-all hover:bg-surface-variant">
+          <a href="#soporte" className="mx-2 flex items-center gap-3 rounded-lg p-2 text-sm text-on-surface-variant transition-all hover:bg-surface-variant">
             <span className="material-symbols-outlined text-sm">help_outline</span>
             Soporte
           </a>
@@ -101,7 +98,7 @@ export const PanelView = async () => {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <div className="col-span-1 flex flex-col justify-between rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm md:col-span-2">
+          <div id="alertas" className="col-span-1 flex scroll-mt-24 flex-col justify-between rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm md:col-span-2">
             <SubscriptionForm company={company} />
           </div>
 
@@ -169,6 +166,32 @@ export const PanelView = async () => {
             consentimiento puede tener implicaciones legales bajo la Ley de Habeas Data (Ley 1581/2012).
           </p>
           <PersonaSearch />
+        </section>
+
+        <section id="configuracion" className="scroll-mt-24 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+          <h2 className="mb-1 flex items-center gap-2 font-headline text-lg font-bold text-on-surface">
+            <span className="material-symbols-outlined text-primary">settings</span>
+            Configuración
+          </h2>
+          <p className="mb-4 text-sm text-on-surface-variant">
+            Verifica un número de WhatsApp para tu cuenta — pensado para recibir ahí alertas de oportunidad más adelante, en
+            paralelo al correo.
+          </p>
+          <WhatsAppVerification company={company} />
+        </section>
+
+        <section id="soporte" className="scroll-mt-24 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+          <h2 className="mb-1 flex items-center gap-2 font-headline text-lg font-bold text-on-surface">
+            <span className="material-symbols-outlined text-primary">help_outline</span>
+            Soporte
+          </h2>
+          <p className="mb-4 text-sm text-on-surface-variant">
+            RASTRO — Hackathon Croma / Datos Abiertos Colombia. Para preguntas sobre tu cuenta o los datos mostrados, escribe a{" "}
+            <a href="mailto:soporte@rastro.co" className="font-semibold text-primary-container hover:underline">
+              soporte@rastro.co
+            </a>
+            .
+          </p>
         </section>
       </div>
     </main>

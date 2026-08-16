@@ -7,7 +7,7 @@ import { buildConcentration } from "../services/concentration.js";
 import { summarizeExpediente } from "../services/aiSummary.js";
 import { OPPORTUNITY_SEED_ENTITIES, SECTORS } from "../config/opportunitySeeds.js";
 import { buildPersonaDossier } from "../services/backgroundCheck.js";
-import { registerCompany, loginCompany, updateSubscription } from "../services/companies.js";
+import { registerCompany, loginCompany, updateSubscription, requestWhatsAppCode, verifyWhatsAppCode } from "../services/companies.js";
 import { pollNewOpportunities } from "../services/notifications.js";
 import { collection } from "../store/jsonStore.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -18,7 +18,7 @@ import { requireAuth } from "../middleware/auth.js";
  * los módulos anteriores. Sin lógica de negocio propia: cada handler solo
  * valida entrada, delega, y da forma a la respuesta HTTP.
  */
-export function buildApiRouter(source, emailAdapter) {
+export function buildApiRouter(source, emailAdapter, whatsappAdapter) {
   const router = Router();
 
   router.get("/meta", (_req, res) => {
@@ -131,6 +131,29 @@ export function buildApiRouter(source, emailAdapter) {
     const { active, sector, location } = req.body || {};
     const company = updateSubscription(req.company.id, { active, sector, location });
     res.json({ company });
+  });
+
+  // Verificación de WhatsApp (Configuración) — mismo principio de honestidad
+  // que el resto de RASTRO: sin un proveedor real conectado (WHATSAPP_PROVIDER),
+  // el código se registra en data/outbox_whatsapp.json y se devuelve en la
+  // respuesta en vez de fingir un envío real. Ver src/services/companies.js.
+  router.post("/companies/me/whatsapp/request-code", requireAuth, async (req, res) => {
+    const { phone } = req.body || {};
+    if (!phone) return res.status(400).json({ error: "Número de WhatsApp requerido." });
+    try {
+      const result = await requestWhatsAppCode(whatsappAdapter, req.company.id, phone);
+      if (!result.ok) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible enviar el código de verificación.", detail: err.message });
+    }
+  });
+
+  router.post("/companies/me/whatsapp/verify", requireAuth, (req, res) => {
+    const { code } = req.body || {};
+    const result = verifyWhatsAppCode(req.company.id, code);
+    if (!result.ok) return res.status(400).json({ error: result.error });
+    res.json({ company: result.company });
   });
 
   // Visibilidad del envío simulado — permite demostrar el flujo de alertas

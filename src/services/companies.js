@@ -30,7 +30,7 @@ function estadoEmails() {
 
 function toPublicCompany(row) {
   if (!row) return null;
-  const { passwordHash: _passwordHash, ...pub } = row;
+  const { passwordHash: _passwordHash, whatsappPending: _whatsappPending, ...pub } = row;
   return pub;
 }
 
@@ -121,4 +121,58 @@ export function subscribersMatching({ sectors = [], location }) {
       return sectorOk && locationOk;
     })
     .map(toPublicCompany);
+}
+
+const WHATSAPP_CODE_TTL_MS = 10 * 60 * 1000;
+
+function normalizePhone(raw) {
+  const digits = (raw || "").replace(/[^\d+]/g, "");
+  return digits.startsWith("+") ? digits : `+57${digits}`; // Colombia por defecto si no traen indicativo
+}
+
+/**
+ * Genera un código de 6 dígitos, lo guarda pendiente de confirmación (nunca
+ * se expone vía toPublicCompany) y lo "envía" por el adaptador configurado
+ * (hoy siempre mock — ver src/adapters/whatsapp/). Devuelve el código en la
+ * respuesta solo cuando el proveedor es mock: sin un WhatsApp Business API
+ * real conectado, es la única forma de que el flujo sea probable en demo,
+ * y queda claramente marcado como tal en vez de fingir un envío real.
+ */
+export async function requestWhatsAppCode(whatsappAdapter, companyId, rawPhone) {
+  const phone = normalizePhone(rawPhone);
+  if (!/^\+\d{7,15}$/.test(phone)) {
+    return { ok: false, error: "Número de WhatsApp inválido." };
+  }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = new Date(Date.now() + WHATSAPP_CODE_TTL_MS).toISOString();
+
+  const updated = collection("companies").update((c) => c.id === companyId, {
+    whatsappPending: { phone, code, expiresAt },
+  });
+  if (!updated) return { ok: false, error: "Cuenta no encontrada." };
+
+  const result = await whatsappAdapter.send({
+    to: phone,
+    message: `Tu código de verificación de RASTRO es ${code}. Vence en 10 minutos.`,
+  });
+
+  const isMock = result.id != null && !process.env.WHATSAPP_PROVIDER;
+  return { ok: true, phone, expiresAt, ...(isMock ? { devCode: code } : {}) };
+}
+
+export function verifyWhatsAppCode(companyId, code) {
+  const companies = collection("companies");
+  const row = companies.find((c) => c.id === companyId);
+  const pending = row?.whatsappPending;
+
+  if (!pending) return { ok: false, error: "No hay una verificación de WhatsApp en curso — solicita un código primero." };
+  if (new Date(pending.expiresAt).getTime() < Date.now()) return { ok: false, error: "El código venció — solicita uno nuevo." };
+  if (String(code || "").trim() !== pending.code) return { ok: false, error: "Código incorrecto." };
+
+  const updated = companies.update((c) => c.id === companyId, {
+    whatsapp: { number: pending.phone, verifiedAt: new Date().toISOString() },
+    whatsappPending: null,
+  });
+  return { ok: true, company: toPublicCompany(updated) };
 }
