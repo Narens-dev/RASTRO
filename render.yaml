@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: rastro-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATA_SOURCE
+        value: croma
+      - key: CROMA_MCP_URL
+        value: https://api.croma.run/mcp
+      - key: CROMA_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CACHE_TTL_MS
+        value: "600000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RASTRO_ESTADO_EMAILS
+        sync: false
+      - key: EMAIL_PROVIDER
+        value: mock
+      - key: WHATSAPP_PROVIDER
+        value: mock
+      - key: OPPORTUNITY_POLL_INTERVAL_MS
+        value: "900000"
