@@ -30,7 +30,7 @@ function estadoEmails() {
 
 function toPublicCompany(row) {
   if (!row) return null;
-  const { passwordHash: _passwordHash, whatsappPending: _whatsappPending, ...pub } = row;
+  const { passwordHash: _passwordHash, whatsappPending: _whatsappPending, loginPending: _loginPending, ...pub } = row;
   return pub;
 }
 
@@ -85,13 +85,51 @@ export async function registerCompany(source, { nit, email, password, sector, lo
   return { ok: true, company: toPublicCompany(row), token: signToken(row) };
 }
 
-export function loginCompany({ email, password }) {
+const LOGIN_CODE_TTL_MS = 10 * 60 * 1000;
+
+/**
+ * Paso 1 del login — valida credenciales, genera un código de 6 dígitos y lo
+ * envía por correo (EmailPort). No emite token todavía: eso solo pasa en
+ * completeLogin, tras confirmar el código. Mismo principio de honestidad que
+ * la verificación de WhatsApp: sin un proveedor real distinto de mock, el
+ * código se devuelve en la respuesta marcado como "modo demo" en vez de
+ * fingir que llegó un correo real.
+ */
+export async function beginLogin(emailAdapter, { email, password }) {
   const cleanEmail = (email || "").trim().toLowerCase();
   const companies = collection("companies");
   const row = companies.find((c) => c.email === cleanEmail);
   if (!row || !bcrypt.compareSync(password || "", row.passwordHash)) {
     return { ok: false, error: "Correo o contraseña incorrectos." };
   }
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = new Date(Date.now() + LOGIN_CODE_TTL_MS).toISOString();
+  companies.update((c) => c.id === row.id, { loginPending: { code, expiresAt } });
+
+  const result = await emailAdapter.send({
+    to: row.email,
+    subject: "Tu código de verificación — RASTRO",
+    html: `<p>Tu código de verificación es <strong>${code}</strong>. Vence en 10 minutos.</p>`,
+    text: `Tu código de verificación es ${code}. Vence en 10 minutos.`,
+  });
+
+  const isMock = result.id != null && (process.env.EMAIL_PROVIDER || "mock") === "mock";
+  return { ok: true, email: row.email, expiresAt, ...(isMock ? { devCode: code } : {}) };
+}
+
+/** Paso 2 del login — confirma el código y recién ahí emite el token. */
+export function completeLogin({ email, code }) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  const companies = collection("companies");
+  const row = companies.find((c) => c.email === cleanEmail);
+  const pending = row?.loginPending;
+
+  if (!row || !pending) return { ok: false, error: "No hay una verificación en curso — inicia sesión de nuevo." };
+  if (new Date(pending.expiresAt).getTime() < Date.now()) return { ok: false, error: "El código venció — inicia sesión de nuevo." };
+  if (String(code || "").trim() !== pending.code) return { ok: false, error: "Código incorrecto." };
+
+  companies.update((c) => c.id === row.id, { loginPending: null });
   return { ok: true, company: toPublicCompany(row), token: signToken(row) };
 }
 

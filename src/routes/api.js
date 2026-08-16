@@ -7,7 +7,7 @@ import { buildConcentration } from "../services/concentration.js";
 import { summarizeExpediente } from "../services/aiSummary.js";
 import { OPPORTUNITY_SEED_ENTITIES, SECTORS } from "../config/opportunitySeeds.js";
 import { buildPersonaDossier } from "../services/backgroundCheck.js";
-import { registerCompany, loginCompany, updateSubscription, requestWhatsAppCode, verifyWhatsAppCode } from "../services/companies.js";
+import { registerCompany, beginLogin, completeLogin, updateSubscription, requestWhatsAppCode, verifyWhatsAppCode } from "../services/companies.js";
 import { pollNewOpportunities } from "../services/notifications.js";
 import { collection } from "../store/jsonStore.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -116,9 +116,23 @@ export function buildApiRouter(source, emailAdapter, whatsappAdapter) {
     res.status(201).json({ company: result.company, token: result.token });
   });
 
-  router.post("/companies/login", (req, res) => {
+  // Login en dos pasos: este endpoint solo valida credenciales y envía el
+  // código por correo — nunca emite token. El token solo sale de
+  // /companies/login/verify, tras confirmar el código.
+  router.post("/companies/login", async (req, res) => {
     const { email, password } = req.body || {};
-    const result = loginCompany({ email, password });
+    try {
+      const result = await beginLogin(emailAdapter, { email, password });
+      if (!result.ok) return res.status(401).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible enviar el código de verificación.", detail: err.message });
+    }
+  });
+
+  router.post("/companies/login/verify", (req, res) => {
+    const { email, code } = req.body || {};
+    const result = completeLogin({ email, code });
     if (!result.ok) return res.status(401).json({ error: result.error });
     res.json({ company: result.company, token: result.token });
   });
