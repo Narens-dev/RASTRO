@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   TIER 1 — PRIMITIVES  (`--raw-*`)
+   Raw literal values. The only tier allowed to contain a hex/px/ms literal.
+   Never referenced in markup, never bound into @theme. Rename freely.
+   Grammar: --raw-<category>-<name>[-<shade>]
+   Source: RASTRO-documento-de-proyecto.md → "5. Identidad de marca".
+   See obsidian/frontend/design-system.md → "Token naming convention".
+   --------------------------------------------------------------------------- */
+:root {
+  --raw-color-white: #ffffff;
+  --raw-color-cream-50: #f7f5f0;
+
+  --raw-color-ink-900: #14110f;
+  --raw-color-ink-950: #08090a;
+
+  --raw-color-emerald-500: #0c8a4a;
+  --raw-color-emerald-700: #046a38;
+  --raw-color-emerald-900: #033d21;
+  --raw-color-emerald-100: #e2efe6;
+
+  --raw-color-gold-400: #e2c465;
+  --raw-color-gold-600: #c9a227;
+
+  --raw-color-red-100: #fbe9e5;
+  --raw-color-red-700: #b3311c;
+
+  --raw-color-gray-100: #edeae2;
+  --raw-color-gray-500: #6b675f;
+
+  --raw-duration-fast: 150ms;
+  --raw-duration-normal: 250ms;
+  --raw-duration-slow: 600ms;
+}
+
+/* ---------------------------------------------------------------------------
+   TIER 2 — SEMANTIC  (role names, no namespace prefix)
+   Purpose, not appearance. Always `var(--raw-*)` — never a literal.
+   RASTRO is a dual-tone marketing site by design (dark hero/nav/footer, light
+   body) rather than a `prefers-color-scheme` dark mode — sections opt into the
+   inverse palette explicitly via `bg-background-inverse text-foreground-inverse`.
+   Muted/translucent variants use Tailwind's `/opacity` modifier on these
+   tokens at the call site (e.g. `text-foreground-inverse/70`) instead of
+   separate alpha primitives — v4's `color-mix()` utilities make that a first-class,
+   token-safe way to get a translucent variant without a literal per shade.
+   Grammar: --<role>[-<variant>][-<state>]
+   --------------------------------------------------------------------------- */
+:root {
+  --background: var(--raw-color-cream-50);
+  --foreground: var(--raw-color-ink-900);
+  --surface-raised: var(--raw-color-white);
+
+  --background-inverse: var(--raw-color-ink-950);
+  --foreground-inverse: var(--raw-color-cream-50);
+
+  --action-primary: var(--raw-color-emerald-700);
+  --action-primary-hover: var(--raw-color-emerald-500);
+  --action-primary-dark: var(--raw-color-emerald-900);
+
+  --accent-gold: var(--raw-color-gold-600);
+  --accent-gold-soft: var(--raw-color-gold-400);
+
+  /* Niveles de evidencia — Principio transversal del documento de proyecto:
+     nunca un veredicto único, siempre estos tres niveles con su propia
+     superficie de color. No combinar en un token de "riesgo" genérico. */
+  --evidence-high: var(--raw-color-red-700);
+  --evidence-high-surface: var(--raw-color-red-100);
+  --evidence-none: var(--raw-color-gray-500);
+  --evidence-none-surface: var(--raw-color-gray-100);
+  --evidence-clean: var(--raw-color-emerald-700);
+  --evidence-clean-surface: var(--raw-color-emerald-100);
+
+  --duration-fast: var(--raw-duration-fast);
+  --duration-normal: var(--raw-duration-normal);
+  --duration-slow: var(--raw-duration-slow);
+}
+
+/* ---------------------------------------------------------------------------
+   THEME BINDINGS — map semantic tokens into Tailwind namespaces.
+   Every entry is exactly `--<tw-namespace>-<role>: var(--<role>)`.
+   Only these namespaces generate utilities (verified against tailwindcss
+   v4.3.3): --color-* --spacing-* --radius-* --leading-* --tracking-* --text-*
+   --font-* --ease-* --breakpoint-* --container-* --shadow-* --blur-* --animate-*
+   NOTE: there is NO --duration-* namespace in v4 — durations stay Tier 2 only
+   and are consumed as `duration-[var(--duration-fast)]`.
+   --------------------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface-raised: var(--surface-raised);
+  --color-background-inverse: var(--background-inverse);
+  --color-foreground-inverse: var(--foreground-inverse);
+
+  --color-action-primary: var(--action-primary);
+  --color-action-primary-hover: var(--action-primary-hover);
+  --color-action-primary-dark: var(--action-primary-dark);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-soft: var(--accent-gold-soft);
+
+  --color-evidence-high: var(--evidence-high);
+  --color-evidence-high-surface: var(--evidence-high-surface);
+  --color-evidence-none: var(--evidence-none);
+  --color-evidence-none-surface: var(--evidence-none-surface);
+  --color-evidence-clean: var(--evidence-clean);
+  --color-evidence-clean-surface: var(--evidence-clean-surface);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-manrope);
+
+  /* TIER 3 — component token. Reused as the page-body max-width on every
+     view, the nav, and the footer — cannot sit in a shared component since
+     each is its own top-level element, so per design-system.md rule 6 this
+     is exactly the case a component token exists for. Generates `max-w-page`. */
+  --container-page: 73.75rem;
+
+  /* Leading floor for clipped TextEngine reveals — see
+     obsidian/frontend/text-engine.md → "Alignment & line-height". */
+  --leading-display: 1.1;
+
+  --ease-entrance: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------------------------------------------------------------------
+     Stitch reference palette — literal port of the Material-3-derived
+     token set Stitch generated for the RASTRO design system, so the Stitch
+     mockups (obsidian design source) can be reproduced class-for-class
+     instead of re-derived through the Tier 1/2 system above. Intentionally
+     bypasses the three-tier convention for fidelity to the source design;
+     revisit if/when this becomes the permanent palette. `background` and
+     `surface-raised` are not repeated here — they already resolve to the
+     same hex via the tokens above.
+     --------------------------------------------------------------------- */
+  --color-on-background: #181d18;
+  --color-surface: #ffffff;
+  --color-surface-variant: #dfe4dc;
+  --color-surface-dim: #d7dbd4;
+  --color-surface-bright: #f7f5f0;
+  --color-surface-tint: #046a38;
+  --color-surface-container: #ebefe8;
+  --color-surface-container-low: #f1f5ed;
+  --color-surface-container-high: #e5e9e2;
+  --color-surface-container-highest: #dfe4dc;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #14110f;
+  --color-on-surface-variant: #3f4940;
+  --color-inverse-surface: #14110f;
+  --color-inverse-on-surface: #eef2eb;
+  --color-inverse-primary: #83d99b;
+  --color-primary: #046a38;
+  --color-primary-container: #046a38;
+  --color-primary-fixed: #9ef6b6;
+  --color-primary-fixed-dim: #83d99b;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #90e7a8;
+  --color-on-primary-fixed: #00210d;
+  --color-on-primary-fixed-variant: #00522a;
+  --color-secondary: #46664d;
+  --color-secondary-container: #c5e9ca;
+  --color-secondary-fixed: #c8ebcd;
+  --color-secondary-fixed-dim: #accfb2;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #4a6a51;
+  --color-on-secondary-fixed: #02210e;
+  --color-on-secondary-fixed-variant: #2f4d37;
+  --color-tertiary: #792833;
+  --color-tertiary-container: #973f49;
+  --color-tertiary-fixed: #ffdadb;
+  --color-tertiary-fixed-dim: #ffb2b7;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #ffc6c9;
+  --color-on-tertiary-fixed: #40000e;
+  --color-on-tertiary-fixed-variant: #7c2a35;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-outline: #6f7a6f;
+  --color-outline-variant: #bec9be;
+  --color-brand-accent: #c9a227;
+  --color-brand-emerald-dark: #033d21;
+
+  --font-headline: var(--font-manrope);
+  --font-label: var(--font-public-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@layer base {
+  /* Adaptive scaling grid — scales the root font-size with the viewport so a
+     rem-based layout stays proportional. Each breakpoint divides FONT_BASE
+     (16px) by the design base width its range was laid out at:
+       font-size: 16 * 100 / baseWidth  (vw)
+     Above 1920px the AdaptiveGrid component takes over (scale-up).
+     Keep in sync with src/components/common/grid/grid.config.ts. */
+  html {
+    font-size: 16px;
+  }
+
+  @media (max-width: 1920px) {
+    html {
+      font-size: 0.833333vw; /* 16 * 100 / 1920 */
+    }
+  }
+
+  @media (max-width: 1440px) {
+    html {
+      font-size: 1.111111vw; /* 16 * 100 / 1440 */
+    }
+  }
+
+  @media (max-width: 1024px) {
+    html {
+      font-size: 1.5625vw; /* 16 * 100 / 1024 */
+    }
+  }
+
+  @media (max-width: 640px) {
+    html {
+      font-size: 4.444444vw; /* 16 * 100 / 360 */
+    }
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Google's standard reset for the Material Symbols variable icon font —
+     required for the glyphs to render as icons instead of ligature text.
+     Used verbatim across the Stitch-derived mockups. */
+  .material-symbols-outlined {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Reserved a-la-carte hairline for section dividers on the inverse (dark)
+   palette — a repeated pure-utility combo with no structure, so a
+   `@utility` per ADR-0012's "where a style goes" table, not a component.
+   `@utility` is top-level only in Tailwind v4 — it cannot nest inside
+   `@layer utilities` (Tailwind generates that layer placement itself). */
+@utility divider-inverse {
+  border-color: color-mix(in oklab, var(--foreground-inverse) 12%, transparent);
+}
+
+@layer components {
+  /* Decorative hero background — a composed multi-stop gradient. Belongs here
+     per design-system.md's "Where a style goes": too complex to express as a
+     readable Tailwind arbitrary utility, used once, not a repeated pattern
+     that warrants a component. References only semantic tokens via
+     `color-mix()` — no literals. */
+  .hero-glow {
+    background:
+      radial-gradient(42% 50% at 15% 15%, color-mix(in oklab, var(--action-primary) 75%, transparent), transparent 70%),
+      radial-gradient(38% 46% at 88% 10%, color-mix(in oklab, var(--accent-gold) 50%, transparent), transparent 70%),
+      radial-gradient(50% 55% at 55% 95%, color-mix(in oklab, var(--action-primary) 45%, transparent), transparent 70%);
+    filter: blur(3.75rem);
+  }
+
+  /* Literal port of the Stitch mockups' hero background + gradient headline
+     text — same reasoning as `.hero-glow` above (too complex for a readable
+     utility string, used once). */
+  .hero-gradient-bg {
+    background: linear-gradient(180deg, var(--color-inverse-surface) 0%, color-mix(in oklab, var(--color-primary) 10%, transparent) 50%, var(--color-inverse-surface) 100%);
+    background-color: var(--color-inverse-surface);
+  }
+  .gradient-text-brand {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-brand-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}

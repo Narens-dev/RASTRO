@@ -1,0 +1,161 @@
+import { Router } from "express";
+import { search } from "../services/search.js";
+import { buildExpediente } from "../services/scoreEngine.js";
+import { buildContractTracking } from "../services/contractTracking.js";
+import { listOpportunities } from "../services/opportunities.js";
+import { summarizeExpediente } from "../services/aiSummary.js";
+import { OPPORTUNITY_SEED_ENTITIES, SECTORS } from "../config/opportunitySeeds.js";
+import { buildPersonaDossier } from "../services/backgroundCheck.js";
+import { registerCompany, loginCompany, updateSubscription } from "../services/companies.js";
+import { pollNewOpportunities } from "../services/notifications.js";
+import { collection } from "../store/jsonStore.js";
+import { requireAuth } from "../middleware/auth.js";
+
+/**
+ * Módulo 8 — API REST.
+ * Único punto de contacto entre el frontend y toda la lógica de negocio de
+ * los módulos anteriores. Sin lógica de negocio propia: cada handler solo
+ * valida entrada, delega, y da forma a la respuesta HTTP.
+ */
+export function buildApiRouter(source, emailAdapter) {
+  const router = Router();
+
+  router.get("/meta", (_req, res) => {
+    res.json({
+      dataSource: source.mode,
+      degraded: source.degraded,
+      sectors: ["Todos", ...SECTORS],
+      locations: ["Todas", ...new Set(OPPORTUNITY_SEED_ENTITIES.map((e) => e.location))],
+    });
+  });
+
+  router.get("/search", async (req, res) => {
+    const q = (req.query.q || "").toString();
+    if (!q.trim()) return res.status(400).json({ error: "Parámetro 'q' requerido." });
+    try {
+      const result = await search(source, q);
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible completar la búsqueda.", detail: err.message });
+    }
+  });
+
+  router.get("/entity/:docType/:doc", async (req, res) => {
+    const { docType, doc } = req.params;
+    if (!["NIT", "CC", "CE"].includes(docType.toUpperCase())) {
+      return res.status(400).json({ error: "docType debe ser NIT, CC o CE." });
+    }
+    try {
+      const expediente = await buildExpediente(source, { doc, docType: docType.toUpperCase(), name: req.query.name?.toString() });
+      res.json(expediente);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible construir el expediente.", detail: err.message });
+    }
+  });
+
+  router.get("/entity/:docType/:doc/summary", async (req, res) => {
+    const { docType, doc } = req.params;
+    try {
+      const expediente = await buildExpediente(source, { doc, docType: docType.toUpperCase(), name: req.query.name?.toString() });
+      const summary = await summarizeExpediente(expediente);
+      res.json(summary);
+    } catch (err) {
+      res.status(502).json({ available: false, reason: err.message });
+    }
+  });
+
+  router.get("/contract/:contractId", async (req, res) => {
+    try {
+      const tracking = await buildContractTracking(source, req.params.contractId);
+      if (!tracking.found) return res.status(404).json({ error: "Contrato no encontrado.", contractId: req.params.contractId });
+      res.json(tracking);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible obtener el seguimiento del contrato.", detail: err.message });
+    }
+  });
+
+  router.get("/opportunities", async (req, res) => {
+    const { sector, location } = req.query;
+    const minValue = req.query.minValue ? Number(req.query.minValue) : null;
+    const maxValue = req.query.maxValue ? Number(req.query.maxValue) : null;
+    try {
+      const result = await listOpportunities(source, {
+        sector: sector?.toString(),
+        location: location?.toString(),
+        minValue,
+        maxValue,
+        includeWinners: req.query.winners === "true",
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible cargar las oportunidades.", detail: err.message });
+    }
+  });
+
+  // --- Apartado Empresas: cuentas, suscripción a alertas, estudio de seguridad ---
+
+  router.post("/companies/register", async (req, res) => {
+    const { nit, email, password, sector, location } = req.body || {};
+    const result = await registerCompany(source, { nit, email, password, sector, location });
+    if (!result.ok) return res.status(400).json({ error: result.error });
+    res.status(201).json({ company: result.company, token: result.token });
+  });
+
+  router.post("/companies/login", (req, res) => {
+    const { email, password } = req.body || {};
+    const result = loginCompany({ email, password });
+    if (!result.ok) return res.status(401).json({ error: result.error });
+    res.json({ company: result.company, token: result.token });
+  });
+
+  router.get("/companies/me", requireAuth, (req, res) => {
+    res.json({ company: req.company });
+  });
+
+  router.put("/companies/me/subscription", requireAuth, (req, res) => {
+    const { active, sector, location } = req.body || {};
+    const company = updateSubscription(req.company.id, { active, sector, location });
+    res.json({ company });
+  });
+
+  // Visibilidad del envío simulado — permite demostrar el flujo de alertas
+  // sin depender de un proveedor de correo real conectado.
+  router.get("/companies/me/notifications", requireAuth, (req, res) => {
+    const sent = collection("outbox_emails")
+      .filter((m) => m.to === req.company.email)
+      .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+    res.json({ count: sent.length, notifications: sent });
+  });
+
+  // Dispara la detección de oportunidades nuevas + envío de alertas. Pensado
+  // para un cron externo en producción; expuesto aquí (autenticado) para
+  // poder demostrar el flujo bajo demanda durante el hackathon.
+  router.post("/opportunities/poll", requireAuth, async (_req, res) => {
+    try {
+      const result = await pollNewOpportunities(source, emailAdapter);
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible completar el sondeo de oportunidades.", detail: err.message });
+    }
+  });
+
+  // Estudio de seguridad por cédula — antecedentes, EPS, multas de tránsito y
+  // demás fuentes cruzadas en backgroundCheck.js. Restringido a cuentas
+  // autenticadas: a diferencia del expediente de NIT (público), esta
+  // información personal solo debe ser consultable por encargados de
+  // contratación/RRHH de una empresa o por el Estado, no por cualquiera.
+  router.get("/personas/:docType/:doc", requireAuth, async (req, res) => {
+    const { docType, doc } = req.params;
+    if (!["CC", "CE"].includes(docType.toUpperCase())) {
+      return res.status(400).json({ error: "docType debe ser CC o CE." });
+    }
+    try {
+      const dossier = await buildPersonaDossier(source, { doc, docType: docType.toUpperCase(), name: req.query.name?.toString() });
+      res.json(dossier);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible construir el estudio de seguridad.", detail: err.message });
+    }
+  });
+
+  return router;
+}

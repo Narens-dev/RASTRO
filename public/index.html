@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RASTRO — Sigue el rastro del dinero público</title>
+  <meta name="description" content="Expedientes de riesgo trazable y alertas de oportunidad de negocio a partir de fuentes oficiales del Estado colombiano." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=24 height=24 rx=6 fill=%22%23046A38%22/></svg>" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="rastro-nav"></div>
+
+  <header class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grain"></div>
+    <div class="container">
+      <div class="eyebrow"><span class="dot"></span> Hackathon Croma · Datos Abiertos Colombia</div>
+      <h1>Sigue el <span class="accent">rastro</span> del dinero público.</h1>
+      <p class="hero-sub">RASTRO cruza en segundos seis fuentes oficiales del Estado colombiano — SECOP, RUES, Rama Judicial, Procuraduría, Contraloría y Contaduría — para generar un expediente de riesgo trazable, o una alerta de oportunidad de negocio. Nunca un veredicto: siempre la evidencia y su fuente.</p>
+
+      <form id="search-form" autocomplete="off">
+        <div class="search-pill">
+          <input id="search-input" type="text" placeholder="Busca un NIT, cédula o nombre de empresa o entidad…" />
+          <button type="submit" class="btn btn-gold">Consultar</button>
+        </div>
+      </form>
+      <p class="hero-hint">Prueba, por ejemplo: <button type="button" data-sample="Constructora Bolivar Bogota">Constructora Bolívar Bogotá</button> · <button type="button" data-sample="900555333">NIT 900555333</button></p>
+
+      <div id="search-status"></div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="section-kicker">Dos modos, un solo motor de datos</span>
+          <h2>De la misma fuente, dos maneras de actuar.</h2>
+          <p>La contratación pública deja huella. RASTRO usa esa huella para vigilar el riesgo y, en la dirección contraria, para nivelar el acceso a oportunidades de negocio.</p>
+        </div>
+
+        <div class="mode-grid">
+          <a href="#" id="mode-transparencia" class="mode-card transparencia reveal">
+            <div class="mode-card-icon">🔎</div>
+            <h3>Modo Transparencia</h3>
+            <p>Busca un NIT, cédula o nombre y recibe un expediente con niveles de evidencia — alto, sin hallazgo o limpio — cada uno con su fuente oficial citada y fecha de consulta.</p>
+            <span class="btn btn-ghost-dark">Buscar un expediente →</span>
+          </a>
+          <a href="/oportunidades.html" class="mode-card oportunidad reveal">
+            <div class="mode-card-icon">📈</div>
+            <h3>Modo Oportunidad</h3>
+            <p>El mismo motor, en dirección contraria: licitaciones activas filtradas por sector y ubicación, con el historial de ganadores anteriores de cada entidad — pensado para pymes.</p>
+            <span class="btn btn-gold">Ver oportunidades →</span>
+          </a>
+        </div>
+
+        <div class="stat-row reveal">
+          <div class="stat-card">
+            <div class="stat-num">6</div>
+            <div class="stat-label">Fuentes oficiales cruzadas en paralelo por cada consulta</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num">0</div>
+            <div class="stat-label">Veredictos emitidos — solo niveles de evidencia trazables</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num"><span class="gold">100%</span></div>
+            <div class="stat-label">Información ya pública por ley — RASTRO solo la cruza y organiza</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-tight">
+      <div class="container">
+        <div class="evidence-band reveal">
+          <span class="section-kicker">Principio no negociable</span>
+          <h2>Niveles de evidencia, nunca veredictos.</h2>
+          <p style="margin-top:16px; max-width:640px; color:var(--text-on-dark-muted); font-size:15.5px;">Cada hallazgo se presenta con su nivel, su fuente oficial y su fecha de consulta. Ningún resultado se combina en un número único que reemplace el juicio de quien consulta — eso preserva la presunción de inocencia.</p>
+
+          <div class="level-grid">
+            <div class="level-card">
+              <div class="level-badge" style="color:#ff8a75;">🟥 Alto</div>
+              <p>Hallazgo verificable con impacto directo — financiero, judicial o disciplinario. Ejemplo: RUES, Rama Judicial, Procuraduría.</p>
+            </div>
+            <div class="level-card">
+              <div class="level-badge" style="color:#c9c5ba;">⬜ Sin hallazgo</div>
+              <p>Fuente consultada sin resultado. No equivale a "limpio" cuando la fuente tiene subregistro documentado.</p>
+            </div>
+            <div class="level-card">
+              <div class="level-badge" style="color:#5bd08a;">🟩 Limpio</div>
+              <p>Verificación positiva explícita de la fuente oficial. Ejemplo: Contraloría o Procuraduría sin antecedentes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="rastro-footer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/index.js"></script>
+</body>
+</html>

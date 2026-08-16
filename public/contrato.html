@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seguimiento de contrato — RASTRO</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=24 height=24 rx=6 fill=%22%23046A38%22/></svg>" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="rastro-nav"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <a href="#" id="back-link" class="back-link">← Volver al expediente</a>
+      <h1 id="contract-title">Cargando seguimiento…</h1>
+      <p class="sub" id="contract-sub"></p>
+    </div>
+  </header>
+
+  <main>
+    <section class="section-tight">
+      <div class="container" style="max-width: 880px; display:flex; flex-direction:column; gap:24px;">
+        <div id="signal-slot"></div>
+
+        <div class="card">
+          <div class="section-kicker">Ejecución financiera</div>
+          <div class="finance-grid" id="finance-grid" style="margin-top:16px;"></div>
+          <div style="margin-top:22px;">
+            <div class="progress-track"><div class="progress-fill" id="progress-time"></div></div>
+            <div class="progress-labels"><span>Plazo transcurrido</span><span id="progress-time-label"></span></div>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="progress-track"><div class="progress-fill gold" id="progress-pay"></div></div>
+            <div class="progress-labels"><span>Ejecución financiera</span><span id="progress-pay-label"></span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-kicker">Línea de tiempo</div>
+          <div class="timeline" id="timeline" style="margin-top:20px;"></div>
+        </div>
+
+        <div class="card" id="guarantees-card"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="rastro-footer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/contrato.js"></script>
+</body>
+</html>
