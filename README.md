@@ -48,8 +48,7 @@ src/
     companies.js                 Cuentas de empresa: registro (verificado por NIT), login, suscripción
     aiSummary.js                Módulo 6 — resumen ejecutivo con Claude (opcional)
   routes/api.js                 Módulo 8 — API REST
-public/                         Módulo 9 — frontend legacy (HTML/JS vanilla, sin build step)
-web/                            Frontend Next.js activo (ver web/AGENTS.md) — proxya src/ vía app/api/**
+web/                            Único frontend (Next.js, ver web/AGENTS.md) — proxya src/ vía app/api/**
 ```
 
 ## Instalación
@@ -79,12 +78,14 @@ Edita `.env`:
 
 ## Uso
 
+Requiere los dos procesos corriendo en paralelo — `server.js` es API pura, no sirve HTML:
+
 ```bash
-npm start          # node server.js
-npm run dev         # node --watch server.js — recarga automática
+npm start                    # API (server.js) en http://localhost:3000
+npm --prefix web run dev     # frontend (Next.js) en http://localhost:3100
 ```
 
-Abre `http://localhost:3000`.
+Abre `http://localhost:3100`.
 
 ## API REST
 

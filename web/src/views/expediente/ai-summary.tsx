@@ -9,28 +9,32 @@ interface AiSummaryProps {
   doc: string;
   docType: string;
   name?: string;
+  /** `/api/entity` (expediente de NIT, público) o `/api/personas` (estudio de seguridad, autenticado). */
+  basePath?: string;
 }
 
 /**
  * Módulo 6 — resumen ejecutivo con IA. Client leaf: fetched after mount so it
- * never blocks the (server-rendered) main expediente content, and hides
- * itself entirely when the model narrates nothing (`available: false`) —
- * matching aiSummary.js's safe-degradation contract. Literal port of the
- * Stitch mockup's gradient card.
+ * never blocks the (server-rendered) main content, and hides itself entirely
+ * when the model narrates nothing (`available: false`) — matching
+ * aiSummary.js's safe-degradation contract. Reused as-is for el estudio de
+ * seguridad de persona (`basePath="/api/personas"`): mismo contrato, mismas
+ * reglas — narra la evidencia, nunca decide si alguien es "apto". Literal
+ * port of the Stitch mockup's gradient card.
  */
-export const AiSummary = ({ doc, docType, name }: AiSummaryProps) => {
+export const AiSummary = ({ doc, docType, name, basePath = "/api/entity" }: AiSummaryProps) => {
   const [state, setState] = useState<"loading" | "hidden" | AiSummaryResponse>("loading");
 
   useEffect(() => {
     let cancelled = false;
     const qs = name ? `?name=${encodeURIComponent(name)}` : "";
-    apiFetch<AiSummaryResponse>(`/api/entity/${docType}/${encodeURIComponent(doc)}/summary${qs}`)
+    apiFetch<AiSummaryResponse>(`${basePath}/${docType}/${encodeURIComponent(doc)}/summary${qs}`)
       .then((res) => !cancelled && setState(res.available ? res : "hidden"))
       .catch(() => !cancelled && setState("hidden"));
     return () => {
       cancelled = true;
     };
-  }, [doc, docType, name]);
+  }, [doc, docType, name, basePath]);
 
   if (state === "hidden") return null;
 

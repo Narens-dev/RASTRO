@@ -220,6 +220,39 @@ export class CromaAdapter extends GovDataSource {
     };
   }
 
+  // Único lugar donde Croma da el proveedor real (con NIT/cédula cuando lo
+  // tiene) y el valor de cada adjudicación de un proceso — la lista liviana
+  // de secopProcessesByEntity no trae ninguno de los dos. `is_group` marca
+  // consorcios/uniones temporales, sin desglose de integrantes (Croma no lo
+  // expone: no son persona jurídica propia, no se registran en RUES).
+  async secopProcess(noticeUid) {
+    const res = await this._call("secop_process", { notice_uid: noticeUid });
+    const d = res?.data ?? res;
+    if (!d?.found) return { found: false, process: null, contracts: [] };
+    const p = d.process;
+    const contracts = (d.contracts || []).map((c) => ({
+      contractId: c.contract_id,
+      provider: c.provider,
+      providerDocument: c.provider_document,
+      isGroup: !!c.is_group,
+      value: c.value,
+      signDate: c.sign_date,
+    }));
+    return {
+      found: true,
+      process: {
+        noticeUid: p.notice_uid,
+        name: p.name,
+        entity: p.entity,
+        entityNit: p.entity_nit,
+        contractType: p.contract_type,
+        phase: p.phase,
+        publishedDate: p.published_date,
+      },
+      contracts,
+    };
+  }
+
   async procuraduriaRecords(documentNumber, documentType = "CC") {
     const res = await this._call("procuraduria_disciplinary_records", { document_number: documentNumber, document_type: documentType });
     const d = res?.data ?? res;

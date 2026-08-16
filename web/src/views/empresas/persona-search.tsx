@@ -5,6 +5,7 @@ import { useState } from "react";
 import { apiFetch, ApiClientError } from "@/lib/api-client";
 import type { EvidenceItem, EvidenceLevel, PersonaDocType, PersonaDossier } from "@/types/rastro";
 import { formatEvidenceDetail } from "@/utils/format-evidence-detail";
+import { AiSummary } from "@/views/expediente/ai-summary";
 
 const inputClass =
   "rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm focus:border-primary-container focus:ring-2 focus:ring-primary-container focus:outline-none";
@@ -159,6 +160,8 @@ export const PersonaSearch = () => {
 
       {dossier && (
         <div className="mt-8 flex flex-col gap-6">
+          <AiSummary doc={dossier.doc} docType={dossier.docType} name={dossier.name ?? undefined} basePath="/api/personas" />
+
           <div className="flex items-end justify-between border-b border-outline-variant pb-4">
             <h3 className="font-display text-xl font-bold text-on-surface">Evidencia por fuente</h3>
             <span className="text-sm font-medium text-outline">{dossier.evidence.length} fuentes cruzadas</span>

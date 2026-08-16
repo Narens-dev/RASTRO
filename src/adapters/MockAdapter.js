@@ -1,5 +1,5 @@
 import { GovDataSource } from "../ports/GovDataSource.js";
-import { ENTITIES, NAME_INDEX, CONTRACTS, OPPORTUNITY_SEED_ENTITIES, OPPORTUNITIES } from "./fixtures/fixtures.js";
+import { ENTITIES, NAME_INDEX, CONTRACTS, OPPORTUNITY_SEED_ENTITIES, OPPORTUNITIES, PROCESS_DETAILS } from "./fixtures/fixtures.js";
 
 const EMPTY = (doc) => ({
   doc,
@@ -50,6 +50,13 @@ export class MockAdapter extends GovDataSource {
 
   async secopContract(contractId) {
     return CONTRACTS[contractId] || { found: false, contract: null };
+  }
+
+  async secopProcess(noticeUid) {
+    const detail = PROCESS_DETAILS[noticeUid];
+    const process = OPPORTUNITIES.find((o) => o.noticeUid === noticeUid);
+    if (!detail || !process) return { found: false, process: null, contracts: [] };
+    return { found: true, process, contracts: detail.contracts };
   }
 
   async procuraduriaRecords(documentNumber) {

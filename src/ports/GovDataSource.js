@@ -40,6 +40,11 @@ export class GovDataSource {
     throw new Error("not implemented");
   }
 
+  /** @returns {Promise<{found:boolean, process?: object, contracts?: object[]}>} */
+  async secopProcess(_noticeUid) {
+    throw new Error("not implemented");
+  }
+
   /** @returns {Promise<{found:boolean, hasRecords?:boolean, records?: object[]}>} */
   async procuraduriaRecords(_documentNumber, _documentType = "CC") {
     throw new Error("not implemented");

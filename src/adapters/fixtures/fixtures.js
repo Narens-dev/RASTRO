@@ -267,4 +267,17 @@ export const OPPORTUNITIES = [
   { noticeUid: "CO1.NTC.9698811", processId: "CO1.REQ.9699100", reference: "IDU-SAMC-011-2026", name: "OBRAS CIVILES DEL NORTE SAS", entity: "ALCALDÍA MAYOR DE BOGOTÁ D.C.", entityNit: "899999061", modality: "Contratación directa", contractType: "Obra", basePrice: 168000000, phase: "Adjudicado", procedureStatus: "Adjudicado", publishedDate: "2026-03-02", url: "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9698811" },
   { noticeUid: "CO1.NTC.9705320", processId: "CO1.REQ.9705800", reference: "IDU-SAMC-014-2026", name: "VIALCON INGENIERÍA S.A.S.", entity: "ALCALDÍA MAYOR DE BOGOTÁ D.C.", entityNit: "899999061", modality: "Contratación directa", contractType: "Obra", basePrice: 195000000, phase: "Adjudicado", procedureStatus: "Adjudicado", publishedDate: "2026-04-20", url: "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9705320" },
   { noticeUid: "CO1.NTC.9612044", processId: "CO1.REQ.9612500", reference: "MED-LP-002-2026", name: "SOFTPUBLICA COLOMBIA SAS", entity: "ALCALDÍA DE MEDELLÍN", entityNit: "890905211", modality: "Contratación directa", contractType: "Prestación de servicios", basePrice: 380000000, phase: "Adjudicado", procedureStatus: "Adjudicado", publishedDate: "2026-01-18", url: "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9612044" },
+  { noticeUid: "CO1.NTC.9855100", processId: "CO1.REQ.9855400", reference: "CALI-LP-030-2026", name: "UNION TEMPORAL VIAS CALI 2026", entity: "ALCALDÍA DE CALI", entityNit: "890399011", modality: "Licitación pública", contractType: "Obra", basePrice: 890000000, phase: "Adjudicado", procedureStatus: "Adjudicado", publishedDate: "2026-02-10", url: "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9855100" },
 ];
+
+// Módulo — Concentración de contratistas. Detalle por proceso (proveedor real +
+// valor de adjudicación), lo único que trae esa forma — el listado liviano de
+// arriba no incluye ganador ni valor adjudicado. Solo cubre los notice_uid ya
+// cerrados que aparecen en OPPORTUNITIES; cualquier otro responde found:false.
+export const PROCESS_DETAILS = {
+  "CO1.NTC.9711002": { contracts: [{ contractId: "CO1.PCCNTR.7711002", provider: "VIALCON INGENIERÍA S.A.S.", providerDocument: "900412233", isGroup: false, value: 210000000, signDate: "2026-05-20" }] },
+  "CO1.NTC.9698811": { contracts: [{ contractId: "CO1.PCCNTR.7698811", provider: "OBRAS CIVILES DEL NORTE SAS", providerDocument: "901223344", isGroup: false, value: 168000000, signDate: "2026-03-10" }] },
+  "CO1.NTC.9705320": { contracts: [{ contractId: "CO1.PCCNTR.7705320", provider: "VIALCON INGENIERÍA S.A.S.", providerDocument: "900412233", isGroup: false, value: 195000000, signDate: "2026-04-28" }] },
+  "CO1.NTC.9612044": { contracts: [{ contractId: "CO1.PCCNTR.7612044", provider: "SOFTPUBLICA COLOMBIA SAS", providerDocument: "900778899", isGroup: false, value: 380000000, signDate: "2026-01-25" }] },
+  "CO1.NTC.9855100": { contracts: [{ contractId: "CO1.PCCNTR.7855100", provider: "UNION TEMPORAL VIAS CALI 2026-VIALCON-CIVILNORTE", providerDocument: null, isGroup: true, value: 890000000, signDate: "2026-02-18" }] },
+};

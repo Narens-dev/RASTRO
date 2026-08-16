@@ -9,6 +9,7 @@ const PORT_METHODS = [
   "secopContractsByProvider",
   "secopProcessesByEntity",
   "secopContract",
+  "secopProcess",
   "procuraduriaRecords",
   "contraloriaFiscalRecords",
   "ramaJudicialByEntity",

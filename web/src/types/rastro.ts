@@ -163,11 +163,18 @@ export interface OpportunitiesResponse {
   opportunities: Opportunity[];
 }
 
+export interface SeedEntity {
+  nit: string;
+  name: string;
+  location: string;
+}
+
 export interface MetaResponse {
   dataSource: "mock" | "croma";
   degraded: boolean;
   sectors: string[];
   locations: string[];
+  entities: SeedEntity[];
 }
 
 export interface CompanySubscription {
@@ -194,6 +201,32 @@ export interface OpportunityNotification {
   text: string;
   provider: string;
   sentAt: string;
+}
+
+export interface ConcentrationProvider {
+  name: string;
+  document: string | null;
+  contractCount: number;
+  totalValue: number;
+  hasGroupContract: boolean;
+  lastDate: string | null;
+  pctOfValue: number;
+}
+
+export interface ConcentrationResponse {
+  entityNit: string;
+  entityName: string | null;
+  windowDays: number;
+  totalProcessesInWindow: number;
+  sampleSize: number;
+  processesOpened: number;
+  processesAwarded: number;
+  capped: boolean;
+  totalValueAnalyzed: number;
+  providerCount: number;
+  topProviders: ConcentrationProvider[];
+  top3ConcentrationPct: number | null;
+  generatedAt: string;
 }
 
 export type PersonaDocType = "CC" | "CE";

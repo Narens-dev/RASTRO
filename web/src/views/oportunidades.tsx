@@ -1,4 +1,5 @@
 import { Explorer } from "./oportunidades/explorer";
+import { ConcentrationPanel } from "./oportunidades/concentration-panel";
 
 /** Modo Oportunidad (Módulo 5) — literal port of the Stitch mockup's dark hero + filters/results (client). */
 export const OportunidadesView = () => {
@@ -19,6 +20,7 @@ export const OportunidadesView = () => {
 
       <section className="px-6 py-12">
         <div className="mx-auto flex max-w-page flex-col gap-8">
+          <ConcentrationPanel />
           <Explorer />
         </div>
       </section>

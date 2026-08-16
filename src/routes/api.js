@@ -3,6 +3,7 @@ import { search } from "../services/search.js";
 import { buildExpediente } from "../services/scoreEngine.js";
 import { buildContractTracking } from "../services/contractTracking.js";
 import { listOpportunities } from "../services/opportunities.js";
+import { buildConcentration } from "../services/concentration.js";
 import { summarizeExpediente } from "../services/aiSummary.js";
 import { OPPORTUNITY_SEED_ENTITIES, SECTORS } from "../config/opportunitySeeds.js";
 import { buildPersonaDossier } from "../services/backgroundCheck.js";
@@ -26,6 +27,7 @@ export function buildApiRouter(source, emailAdapter) {
       degraded: source.degraded,
       sectors: ["Todos", ...SECTORS],
       locations: ["Todas", ...new Set(OPPORTUNITY_SEED_ENTITIES.map((e) => e.location))],
+      entities: OPPORTUNITY_SEED_ENTITIES,
     });
   });
 
@@ -92,6 +94,19 @@ export function buildApiRouter(source, emailAdapter) {
     }
   });
 
+  // Concentración de contratistas — para una entidad contratante (NIT), qué
+  // tan repartidas o concentradas están sus adjudicaciones cerradas recientes
+  // entre proveedores. Ver src/services/concentration.js para el porqué esto
+  // usa proveedor+valor real en vez de un mapa de integrantes de consorcio.
+  router.get("/concentration/:nit", async (req, res) => {
+    try {
+      const result = await buildConcentration(source, req.params.nit);
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({ error: "No fue posible calcular la concentración de contratistas.", detail: err.message });
+    }
+  });
+
   // --- Apartado Empresas: cuentas, suscripción a alertas, estudio de seguridad ---
 
   router.post("/companies/register", async (req, res) => {
@@ -154,6 +169,25 @@ export function buildApiRouter(source, emailAdapter) {
       res.json(dossier);
     } catch (err) {
       res.status(502).json({ error: "No fue posible construir el estudio de seguridad.", detail: err.message });
+    }
+  });
+
+  // Resumen con IA del estudio de seguridad — mismo contrato y mismas reglas
+  // que el resumen del expediente de NIT (summarizeExpediente ya es genérico:
+  // solo lee doc/docType/name/evidence/counts). Narra la evidencia, nunca
+  // decide si la persona es "apta" — ese veredicto no lo emite ni el motor
+  // determinístico ni la IA. Autenticado igual que el resto de /personas.
+  router.get("/personas/:docType/:doc/summary", requireAuth, async (req, res) => {
+    const { docType, doc } = req.params;
+    if (!["CC", "CE"].includes(docType.toUpperCase())) {
+      return res.status(400).json({ error: "docType debe ser CC o CE." });
+    }
+    try {
+      const dossier = await buildPersonaDossier(source, { doc, docType: docType.toUpperCase(), name: req.query.name?.toString() });
+      const summary = await summarizeExpediente(dossier);
+      res.json(summary);
+    } catch (err) {
+      res.status(502).json({ available: false, reason: err.message });
     }
   });
 
