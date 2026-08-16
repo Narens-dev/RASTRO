@@ -66,10 +66,20 @@ const ConcentrationCard = ({ entity }: { entity: SeedEntity }) => {
                 key={p.name}
                 className="flex items-center justify-between gap-2 rounded-lg bg-surface-container px-3 py-2 text-sm"
               >
-                <span className="truncate text-on-surface">
-                  {p.hasGroupContract && <span title="Adjudicado a consorcio/unión temporal">🔗 </span>}
-                  {p.name}
-                  <span className="text-on-surface-variant"> ({p.contractCount})</span>
+                <span className="flex items-center gap-1 truncate text-on-surface">
+                  {p.hasGroupContract && (
+                    <span
+                      className="material-symbols-outlined shrink-0 text-[16px] text-on-surface-variant"
+                      title="Adjudicado a consorcio/unión temporal"
+                      aria-hidden="true"
+                    >
+                      groups
+                    </span>
+                  )}
+                  <span className="truncate">
+                    {p.name}
+                    <span className="text-on-surface-variant"> ({p.contractCount})</span>
+                  </span>
                 </span>
                 <span className="shrink-0 font-semibold text-on-surface">{p.pctOfValue}%</span>
               </li>

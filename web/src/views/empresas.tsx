@@ -36,7 +36,9 @@ export const EmpresasView = () => {
       <section className="px-6 py-16">
         <div className="mx-auto grid w-full max-w-page gap-6 sm:grid-cols-2">
           <div className="rounded-[1.75rem] border border-foreground/8 bg-surface-raised p-9">
-            <div className="grid size-13 place-items-center rounded-2xl bg-accent-gold-soft/15 text-2xl">📣</div>
+            <div className="grid size-13 place-items-center rounded-2xl bg-accent-gold-soft/15 text-2xl">
+              <span className="material-symbols-outlined text-primary-container" aria-hidden="true">campaign</span>
+            </div>
             <h2 className="mt-6 font-display text-[1.375rem] font-bold">Alertas de oportunidad</h2>
             <p className="mt-3 text-[0.9375rem] text-foreground/62">
               Suscríbete por sector y ubicación. Cuando RASTRO detecta una licitación nueva que
@@ -45,7 +47,9 @@ export const EmpresasView = () => {
             </p>
           </div>
           <div className="rounded-[1.75rem] border border-foreground/8 bg-surface-raised p-9">
-            <div className="grid size-13 place-items-center rounded-2xl bg-action-primary-hover/15 text-2xl">🔐</div>
+            <div className="grid size-13 place-items-center rounded-2xl bg-action-primary-hover/15 text-2xl">
+              <span className="material-symbols-outlined text-primary-container" aria-hidden="true">shield_lock</span>
+            </div>
             <h2 className="mt-6 font-display text-[1.375rem] font-bold">Estudio de seguridad por cédula</h2>
             <p className="mt-3 text-[0.9375rem] text-foreground/62">
               Antecedentes penales, disciplinarios y fiscales, procesos judiciales, EPS activa y

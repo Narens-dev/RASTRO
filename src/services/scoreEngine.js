@@ -3,7 +3,7 @@
  * score numérico — ver Principio transversal en el documento de proyecto).
  *
  * Dispara en paralelo las seis fuentes oficiales y clasifica cada una en un
- * nivel de evidencia (🟥 alto / ⬜ sin hallazgo / 🟩 limpio), cada una con su
+ * nivel de evidencia (alto / sin hallazgo / limpio), cada una con su
  * fuente y fecha de consulta. Nunca se combinan en un número único: el
  * resultado es siempre la lista completa, para preservar la presunción de
  * inocencia y la trazabilidad hacia la fuente primaria.

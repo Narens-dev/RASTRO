@@ -60,7 +60,7 @@ function alignmentSignal(contract) {
     return { status: "alineado", label: "Plazo y avance alineados", detail: `El ${Math.round(timeElapsedPct)}% del plazo transcurrido es consistente con el ${Math.round(referenceProgress)}% de avance registrado.`, timeElapsedPct, paidPct, physicalProgressPct };
   }
   if (gap > TOLERANCE_PCT) {
-    return { status: "alerta_atraso", label: "⚠ El plazo avanza más rápido que la ejecución", detail: `Ha transcurrido el ${Math.round(timeElapsedPct)}% del plazo pero el avance registrado es de solo ${Math.round(referenceProgress)}%. Señal automática, no un hallazgo de incumplimiento — requiere verificación.`, timeElapsedPct, paidPct, physicalProgressPct };
+    return { status: "alerta_atraso", label: "El plazo avanza más rápido que la ejecución", detail: `Ha transcurrido el ${Math.round(timeElapsedPct)}% del plazo pero el avance registrado es de solo ${Math.round(referenceProgress)}%. Señal automática, no un hallazgo de incumplimiento — requiere verificación.`, timeElapsedPct, paidPct, physicalProgressPct };
   }
   return { status: "adelantado", label: "Ejecución por delante del plazo", detail: `El avance registrado (${Math.round(referenceProgress)}%) supera el ${Math.round(timeElapsedPct)}% del plazo transcurrido.`, timeElapsedPct, paidPct, physicalProgressPct };
 }

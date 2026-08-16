@@ -9,9 +9,9 @@
 export const LEVEL = { ALTO: "alto", SIN_HALLAZGO: "sin_hallazgo", LIMPIO: "limpio" };
 
 const LEVEL_LABEL = {
-  [LEVEL.ALTO]: "🟥 Alto",
-  [LEVEL.SIN_HALLAZGO]: "⬜ Sin hallazgo",
-  [LEVEL.LIMPIO]: "🟩 Limpio",
+  [LEVEL.ALTO]: "Alto",
+  [LEVEL.SIN_HALLAZGO]: "Sin hallazgo",
+  [LEVEL.LIMPIO]: "Limpio",
 };
 
 export function evidence(source, sourceLabel, level, summary, { detail = null, url = null } = {}) {

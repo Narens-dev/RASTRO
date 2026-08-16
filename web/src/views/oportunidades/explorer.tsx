@@ -120,8 +120,8 @@ export const Explorer = () => {
       <section className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm md:flex-row">
         <div aria-hidden="true" className="absolute inset-y-0 left-0 w-2 bg-primary-container" />
         <div className="z-10 flex items-start gap-4">
-          <span className="mt-1 text-2xl" aria-hidden="true">
-            📣
+          <span className="material-symbols-outlined mt-1 text-2xl text-primary-container" aria-hidden="true">
+            campaign
           </span>
           <div>
             <h3 className="mb-1 font-headline text-lg font-bold text-on-surface">Automatiza tu búsqueda</h3>
@@ -161,8 +161,8 @@ export const Explorer = () => {
 
       {!loading && data && data.count === 0 && (
         <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-20 text-center text-on-surface-variant">
-          <div className="mb-3 text-3xl" aria-hidden="true">
-            🔍
+          <div className="material-symbols-outlined mb-3 text-3xl" aria-hidden="true">
+            search_off
           </div>
           Sin licitaciones activas con estos filtros. Prueba ampliando el rango de valor o el sector.
         </div>
