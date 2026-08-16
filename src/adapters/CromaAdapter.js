@@ -215,6 +215,7 @@ export class CromaAdapter extends GovDataSource {
         guarantees: (d.guarantees || []).map((g) => ({ insurer: g.insurer, type: g.policy_type ?? g.type, validFrom: g.policy_created_date ?? g.created_date, validTo: g.policy_end_date, value: g.value })),
         deliveryPlan: (d.execution_items || []).map((p) => ({ item: p.item ?? p.name, plannedPct: p.planned_pct ?? p.planned_progress ?? p.planned_percentage, actualPct: p.actual_pct ?? p.actual_progress ?? p.actual_percentage, plannedDate: p.planned_date ?? p.date })),
         paidToDate: c.paid_value ?? null,
+        invoicedValue: c.invoiced_value ?? null,
         pendingPaymentValue: c.pending_payment_value ?? null,
       },
     };

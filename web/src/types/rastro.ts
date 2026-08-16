@@ -97,6 +97,8 @@ export interface ContractDetail {
   guarantees: ContractGuarantee[];
   deliveryPlan: ContractDeliveryItem[];
   paidToDate: number | null;
+  invoicedValue: number;
+  invoicedFormatted: string;
   valueFormatted: string;
   totalValueFormatted: string;
   totalValue: number;

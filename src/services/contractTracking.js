@@ -71,6 +71,7 @@ export async function buildContractTracking(source, contractId) {
 
   const totalAdditions = (contract.additions || []).reduce((sum, a) => sum + (a.value || 0), 0);
   const totalValue = (contract.value || 0) + totalAdditions;
+  const invoicedValue = contract.invoicedValue ?? contract.paidToDate ?? 0;
 
   return {
     found: true,
@@ -79,6 +80,8 @@ export async function buildContractTracking(source, contractId) {
       valueFormatted: formatCOP(contract.value),
       totalValueFormatted: formatCOP(totalValue),
       totalValue,
+      invoicedValue,
+      invoicedFormatted: formatCOP(invoicedValue),
       paidToDateFormatted: formatCOP(contract.paidToDate || 0),
       pending: Math.max(0, totalValue - (contract.paidToDate || 0)),
       pendingFormatted: formatCOP(Math.max(0, totalValue - (contract.paidToDate || 0))),

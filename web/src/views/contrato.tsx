@@ -2,61 +2,11 @@ import Link from "next/link";
 
 import { fetchRastroApi } from "@/lib/rastro-api";
 import { ApiError } from "@/lib/api";
-import type { ContractTracking, AlignmentStatus } from "@/types/rastro";
+import type { ContractTracking } from "@/types/rastro";
 import { formatCOP, formatDate } from "@/utils/format";
-import { ProgressBar } from "./contrato/progress-bar";
-
-const SIGNAL_ICON: Record<AlignmentStatus, string> = {
-  alineado: "check_circle",
-  adelantado: "rocket_launch",
-  alerta_atraso: "warning",
-  sin_datos: "info",
-};
-
-const SIGNAL_CLASS: Record<AlignmentStatus, { bg: string; border: string; icon: string; iconBg: string; title: string; body: string }> = {
-  alineado: {
-    bg: "bg-primary-container/10",
-    border: "border-primary-container",
-    icon: "text-primary-container",
-    iconBg: "bg-primary-container/10",
-    title: "text-primary-container",
-    body: "text-on-surface-variant",
-  },
-  adelantado: {
-    bg: "bg-primary-container/10",
-    border: "border-primary-container",
-    icon: "text-primary-container",
-    iconBg: "bg-primary-container/10",
-    title: "text-primary-container",
-    body: "text-on-surface-variant",
-  },
-  alerta_atraso: {
-    bg: "bg-[#FFF0F0]",
-    border: "border-[#BA1A1A]",
-    icon: "text-[#BA1A1A]",
-    iconBg: "bg-[#BA1A1A]/10",
-    title: "text-[#93000A]",
-    body: "text-[#7C2A35]",
-  },
-  sin_datos: {
-    bg: "bg-surface-container-low",
-    border: "border-outline",
-    icon: "text-outline",
-    iconBg: "bg-outline/10",
-    title: "text-on-surface",
-    body: "text-on-surface-variant",
-  },
-};
-
-const TIMELINE_DOT_CLASS: Record<TimelineEventType, string> = {
-  firma: "bg-primary-container",
-  inicio: "bg-primary-container",
-  adicion: "bg-brand-accent",
-  hito: "bg-brand-accent",
-  fin: "bg-outline",
-};
-
-type TimelineEventType = "firma" | "inicio" | "adicion" | "hito" | "fin";
+import { ExecutionGauge } from "./contrato/execution-gauge";
+import { SummaryTimeline } from "./contrato/summary-timeline";
+import { ExecutionTable } from "./contrato/execution-table";
 
 interface ContratoViewProps {
   contractId?: string;
@@ -83,7 +33,6 @@ export const ContratoView = async ({ contractId }: ContratoViewProps) => {
 
   const c = tracking?.contract;
   const alignment = tracking?.alignment;
-  const signal = alignment ? SIGNAL_CLASS[alignment.status] : null;
 
   return (
     <main className="flex flex-grow flex-col">
@@ -133,87 +82,59 @@ export const ContratoView = async ({ contractId }: ContratoViewProps) => {
         </div>
       </header>
 
-      {c && alignment && signal && (
+      {c && alignment && (
         <div className="w-full flex-grow bg-surface-bright">
           <div className="mx-auto -mt-6 flex max-w-page flex-col gap-8 px-6 py-12 md:px-12 lg:px-24">
-            <div className={`flex items-start gap-4 rounded-r-lg border-l-4 p-6 shadow-sm ${signal.bg} ${signal.border}`}>
-              <div className={`mt-1 shrink-0 rounded-full p-2 ${signal.iconBg}`}>
-                <span
-                  className={`material-symbols-outlined ${signal.icon}`}
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  {SIGNAL_ICON[alignment.status]}
-                </span>
-              </div>
-              <div className="flex flex-col gap-2">
-                <h3 className={`font-display text-lg font-bold ${signal.title}`}>{alignment.label}</h3>
-                <p className={`font-body text-sm leading-relaxed ${signal.body}`}>{alignment.detail}</p>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <ExecutionGauge alignment={alignment} />
+
+              <div className="relative col-span-1 flex flex-col gap-6 overflow-hidden rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-sm md:col-span-2">
+                <h2 className="font-label text-xs font-semibold tracking-wider text-on-surface-variant uppercase">Ejecución Financiera</h2>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4">
+                  <div className="min-w-0">
+                    <p className="font-label text-xs text-on-surface-variant">Valor Total</p>
+                    <p className="truncate font-display text-xl font-bold text-on-surface" title={c.totalValueFormatted}>{c.totalValueFormatted}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-label text-xs text-on-surface-variant">Facturado</p>
+                    <p className="truncate font-display text-xl font-bold text-on-surface" title={c.invoicedFormatted}>{c.invoicedFormatted}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-label text-xs text-on-surface-variant">Pagado</p>
+                    <p className="truncate font-display text-xl font-bold text-primary-container" title={c.paidToDateFormatted}>{c.paidToDateFormatted}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-label text-xs text-on-surface-variant">Pendiente</p>
+                    <p className="truncate font-display text-xl font-bold text-on-surface-variant" title={c.pendingFormatted}>{c.pendingFormatted}</p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const total = c.totalValue || 1;
+                  const paidPct = Math.max(0, Math.min(100, ((c.paidToDate ?? 0) / total) * 100));
+                  const invoicedPct = Math.max(paidPct, Math.min(100, (c.invoicedValue / total) * 100));
+                  return (
+                    <div>
+                      <div className="flex h-4 w-full overflow-hidden rounded bg-surface-container-high">
+                        <div className="h-full bg-primary-container" style={{ width: `${paidPct}%` }} title={`Pagado: ${Math.round(paidPct)}%`} />
+                        <div className="h-full bg-brand-accent" style={{ width: `${invoicedPct - paidPct}%` }} title="Facturado no pagado" />
+                      </div>
+                      <div className="mt-2 flex justify-between font-mono text-xs text-on-surface-variant">
+                        <span>0%</span>
+                        <span>{Math.round(invoicedPct)}% Facturado</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
-            <section className="relative flex flex-col gap-8 overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-8 shadow-sm">
-              <div aria-hidden="true" className="absolute top-0 right-0 -mt-16 -mr-16 size-32 rounded-bl-full bg-primary-container/5" />
-              <div className="flex items-center gap-3 border-b border-surface-container pb-4">
-                <span className="material-symbols-outlined text-primary-container">account_balance_wallet</span>
-                <h2 className="font-display text-2xl font-bold text-on-surface">Ejecución Financiera</h2>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="flex flex-col gap-2 rounded-lg bg-surface-container-low p-4">
-                  <span className="font-label text-xs font-semibold tracking-wider text-on-surface-variant uppercase">Valor Total</span>
-                  <span className="font-display text-3xl font-extrabold text-on-surface">{c.totalValueFormatted}</span>
-                  <span className="font-body text-xs text-on-surface-variant">COP</span>
-                </div>
-                <div className="flex flex-col gap-2 rounded-lg border-l-4 border-primary-container bg-surface-container-low p-4">
-                  <span className="font-label text-xs font-semibold tracking-wider text-on-surface-variant uppercase">Pagado a la fecha</span>
-                  <span className="font-display text-3xl font-extrabold text-primary-container">{c.paidToDateFormatted}</span>
-                  <span className="font-body text-xs text-on-surface-variant">
-                    {c.totalValue ? Math.round(((c.paidToDate ?? 0) / c.totalValue) * 100) : 0}% del total
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2 rounded-lg bg-surface-container-low p-4">
-                  <span className="font-label text-xs font-semibold tracking-wider text-on-surface-variant uppercase">Pendiente por pagar</span>
-                  <span className="font-display text-3xl font-extrabold text-on-surface-variant">{c.pendingFormatted}</span>
-                  <span className="font-body text-xs text-on-surface-variant">
-                    {c.totalValue ? Math.round((c.pending / c.totalValue) * 100) : 0}% del total
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-6">
-                <ProgressBar label="Plazo Transcurrido" pct={alignment.timeElapsedPct ?? 0} />
-                <ProgressBar label="Ejecución Financiera (Pagado)" pct={alignment.paidPct ?? alignment.physicalProgressPct ?? 0} gold />
-              </div>
-            </section>
+            <SummaryTimeline contract={c} alignment={alignment} />
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <section className="flex h-full flex-col gap-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-8 shadow-sm">
-                <div className="flex items-center gap-3 border-b border-surface-container pb-4">
-                  <span className="material-symbols-outlined text-primary-container">timeline</span>
-                  <h2 className="font-display text-xl font-bold text-on-surface">Línea de Tiempo</h2>
-                </div>
-
-                {tracking!.timeline.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant">Sin fechas registradas para construir la línea de tiempo.</p>
-                ) : (
-                  <div className="relative flex flex-col gap-8 py-2 pl-6 before:absolute before:inset-y-0 before:left-[11px] before:w-[2px] before:bg-surface-container-high">
-                    {tracking!.timeline.map((ev, i) => (
-                      <div key={`${ev.date}-${i}`} className="relative">
-                        <div
-                          aria-hidden="true"
-                          className={`absolute -left-[30px] top-1 size-3 rounded-full ring-4 ring-surface-container-lowest ${TIMELINE_DOT_CLASS[ev.type]}`}
-                        />
-                        <div className="flex flex-col gap-1">
-                          <span className="font-label text-xs font-bold tracking-wider text-primary-container uppercase">
-                            {formatDate(ev.date)}
-                          </span>
-                          <h4 className="font-display font-bold text-on-surface">{ev.label}</h4>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
+              <ExecutionTable contract={c} />
 
               <section className="flex h-full flex-col gap-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-8 shadow-sm">
                 <div className="flex items-center gap-3 border-b border-surface-container pb-4">

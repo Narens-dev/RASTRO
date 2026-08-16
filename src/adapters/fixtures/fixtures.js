@@ -238,6 +238,7 @@ export const CONTRACTS = {
         { item: "Entrega final", plannedPct: 100, actualPct: 40, plannedDate: "2026-11-18" },
       ],
       paidToDate: 1450800000,
+      invoicedValue: 1544400000,
     },
   },
 };
