@@ -27,11 +27,11 @@ category("Rendimiento", [
 
 category("Disponibilidad y resiliencia", [
     ["RNF-04", "Una falla o límite de tasa de la fuente de datos externa no debe tumbar el servicio.",
-     "Patrón puerto/adaptador: `dataSource.js` degrada automáticamente de CromaAdapter a MockAdapter por método, de forma transparente para el resto del código."],
+     "Patrón puerto/adaptador: <code>dataSource.js</code> degrada automáticamente de CromaAdapter a MockAdapter por método, de forma transparente para el resto del código."],
     ["RNF-05", "El sistema debe poder reportar si está operando en modo degradado.",
-     "`GET /api/meta` expone `degraded: boolean`, calculado sobre una ventana móvil de las últimas 12 llamadas."],
+     "<code>GET /api/meta</code> expone <code>degraded: boolean</code>, calculado sobre una ventana móvil de las últimas 12 llamadas."],
     ["RNF-06", "Las suscripciones y el historial de notificaciones deben sobrevivir a un reinicio del proceso.",
-     "Persistencia en archivos JSON (`data/companies.json`, `data/outbox_emails.json`, `data/seen_opportunities.json`)."],
+     "Persistencia en archivos JSON (<code>data/companies.json</code>, <code>data/outbox_emails.json</code>, <code>data/seen_opportunities.json</code>)."],
 ])
 
 category("Seguridad", [
@@ -40,9 +40,9 @@ category("Seguridad", [
     ["RNF-08", "El token de sesión no debe ser accesible por JavaScript del navegador.",
      "JWT guardado en cookie httpOnly, seteada server-side por los route handlers de Next.js; el navegador nunca la lee directamente."],
     ["RNF-09", "El acceso a datos personales sensibles (estudio de seguridad) debe estar restringido a cuentas autenticadas.",
-     "Middleware `requireAuth` en todas las rutas de `/api/personas/*`; el expediente público de NIT no requiere autenticación por ser información pública."],
+     "Middleware <code>requireAuth</code> en todas las rutas de <code>/api/personas/*</code>; el expediente público de NIT no requiere autenticación por ser información pública."],
     ["RNF-10", "Las llamadas del navegador a servicios externos deben pasar siempre por el backend, nunca directo.",
-     "El frontend solo llama rutas propias `/api/*`; las claves de Croma/Anthropic/email nunca se exponen como variables `NEXT_PUBLIC_*`."],
+     "El frontend solo llama rutas propias <code>/api/*</code>; las claves de Croma/Anthropic/email nunca se exponen como variables <code>NEXT_PUBLIC_*</code>."],
 ])
 
 category("Cumplimiento legal", [
@@ -63,16 +63,16 @@ category("Usabilidad y accesibilidad", [
 
 category("Mantenibilidad y extensibilidad", [
     ["RNF-16", "Debe ser posible reemplazar la fuente de datos o el proveedor de correo/WhatsApp sin tocar la lógica de negocio.",
-     "Arquitectura de puertos y adaptadores: los servicios dependen de interfaces (`GovDataSource`, `EmailPort`, `WhatsAppPort`), no de implementaciones concretas."],
+     "Arquitectura de puertos y adaptadores: los servicios dependen de interfaces (<code>GovDataSource</code>, <code>EmailPort</code>, <code>WhatsAppPort</code>), no de implementaciones concretas."],
     ["RNF-17", "El código debe documentar las decisiones no obvias en el lugar donde importan, no en documentos externos que se desactualizan.",
      "Comentarios explicando el porqué (no el qué) junto a cada decisión de diseño no evidente en el propio archivo."],
 ])
 
 category("Observabilidad", [
     ["RNF-18", "Las degradaciones a datos de respaldo deben quedar registradas para diagnóstico.",
-     "Cada caída a `MockAdapter` se registra en consola con el método y los argumentos que fallaron."],
+     "Cada caída a <code>MockAdapter</code> se registra en consola con el método y los argumentos que fallaron."],
     ["RNF-19", "El estado de la fuente de datos debe ser consultable en tiempo real.",
-     "Endpoint `GET /api/meta` expone `dataSource` (mock/croma) y `degraded` en cada respuesta."],
+     "Endpoint <code>GET /api/meta</code> expone <code>dataSource</code> (mock/croma) y <code>degraded</code> en cada respuesta."],
 ])
 
 build_pdf("03-Requerimientos-No-Funcionales.pdf", "Requerimientos No Funcionales", story)

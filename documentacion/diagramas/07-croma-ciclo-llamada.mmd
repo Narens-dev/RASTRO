@@ -1,0 +1,47 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f3ec', 'primaryBorderColor': '#046A38', 'primaryTextColor': '#14110F', 'lineColor': '#046A38', 'actorBkg': '#046A38', 'actorTextColor': '#ffffff', 'fontFamily': 'Helvetica'}}}%%
+sequenceDiagram
+    participant SVC as Servicio de negocio
+    participant DS as dataSource.js (caché + fallback)
+    participant CA as CromaAdapter.js
+    participant MCP as Cliente MCP persistente
+    participant CROMA as Croma (api.croma.run/mcp)
+    participant MOCK as MockAdapter (respaldo)
+
+    SVC->>DS: source.ruesByNit(doc)
+    DS->>DS: ¿hit en caché (TTL 10 min)?
+    alt en caché
+        DS-->>SVC: resultado cacheado (sin llamar a Croma)
+    else sin caché
+        DS->>CA: ruesByNit(doc)
+        CA->>MCP: callTool("rues_entity_by_nit", { document_number })
+        MCP->>CROMA: llamada MCP sobre HTTPS (timeout 30s)
+
+        alt respuesta síncrona normal
+            CROMA-->>MCP: { status: "completed", data: {...} }
+        else fuente lenta (ej. Contaduría)
+            CROMA-->>MCP: { status: "pending", job_id, status_url }
+            loop hasta 20 intentos, cada 1.5s
+                MCP->>CROMA: GET status_url
+                CROMA-->>MCP: { status: "pending" }
+            end
+            CROMA-->>MCP: { status: "completed", data: {...} }
+        else límite de tasa excedido
+            CROMA-->>MCP: error "Rate limit exceeded, try again in Ns"
+            MCP->>MCP: descarta sesión y reintenta una vez con conexión nueva
+            MCP->>CROMA: reintento
+            CROMA-->>MCP: error persiste
+        end
+
+        MCP-->>CA: payload crudo o error
+        alt éxito
+            CA->>CA: normaliza forma cruda → forma del puerto GovDataSource
+            CA-->>DS: resultado normalizado
+            DS->>DS: guarda en caché + registra éxito en ventana de salud
+            DS-->>SVC: resultado
+        else falla tras reintento
+            DS->>MOCK: ruesByNit(doc) — mismo método, mismo contrato
+            MOCK-->>DS: resultado de respaldo
+            DS->>DS: registra falla en ventana de salud (degraded si >50% reciente)
+            DS-->>SVC: resultado de respaldo (transparente para el llamador)
+        end
+    end

@@ -109,17 +109,17 @@ web/                              Frontend Next.js (ver web/AGENTS.md para sus p
 
 ## Instalación
 
-El backend y el frontend son dos proyectos npm independientes; cada uno requiere su propia instalación.
+El backend y el frontend son dos proyectos npm independientes; cada uno requiere su propia instalación y su propio archivo de variables de entorno. Ninguno de los dos incluye datos sensibles por defecto — sin configuración adicional, el backend arranca en modo `mock` y el frontend funciona igual, sin necesitar credenciales de ningún proveedor externo.
 
 ```bash
 # Backend (raíz del repositorio)
 npm install
-cp .env.example .env
+# Crear .env en la raíz con, como mínimo, DATA_SOURCE=mock — ver la tabla de variables más abajo
 
 # Frontend
 cd web
 npm install
-cp .env.example .env.local
+# Crear web/.env.local con RASTRO_API_URL=http://localhost:3000 — ver la tabla de variables más abajo
 cd ..
 ```
 

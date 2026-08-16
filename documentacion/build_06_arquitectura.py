@@ -15,7 +15,7 @@ story.append(p(
     "RASTRO se compone de dos procesos independientes que se despliegan por separado: un backend "
     "Express que expone una API REST pura (sin servir HTML), y un frontend Next.js que renderiza la "
     "interfaz y actúa como proxy autenticado hacia esa API. El backend nunca es alcanzado directamente "
-    "por el navegador — todas las llamadas del cliente van a rutas propias `/api/*` del frontend, que "
+    "por el navegador — todas las llamadas del cliente van a rutas propias <code>/api/*</code> del frontend, que "
     "reenvían la petición al backend agregando las cabeceras de autenticación necesarias."
 ))
 story += diagram_image("06-arquitectura-sistema.png",
@@ -23,7 +23,7 @@ story += diagram_image("06-arquitectura-sistema.png",
 
 story.append(h1("2. Patrón de puertos y adaptadores"))
 story.append(p(
-    "El núcleo de negocio (servicios en `src/services/`) nunca depende de una implementación concreta "
+    "El núcleo de negocio (servicios en <code>src/services/</code>) nunca depende de una implementación concreta "
     "de acceso a datos externos — depende de interfaces (\"puertos\"): <b>GovDataSource</b> para las "
     "fuentes oficiales, <b>EmailPort</b> para el envío de correo y <b>WhatsAppPort</b> para WhatsApp. "
     "Cada puerto tiene al menos dos adaptadores: uno real (Croma) y uno simulado (Mock), que implementan "
@@ -37,7 +37,7 @@ story.append(p(
     "sin que el resto del sistema se entere."
 ))
 
-story.append(h2("2.1 Composición y resiliencia — `dataSource.js`"))
+story.append(h2("2.1 Composición y resiliencia — <code>dataSource.js</code>"))
 story.append(p(
     "Es el único punto donde se decide qué adaptador de <i>GovDataSource</i> está activo. Envuelve "
     "cada uno de sus 13 métodos con dos capas:"
@@ -51,17 +51,17 @@ story.append(bullets([
 ]))
 story.append(p(
     "El estado de salud se calcula sobre una ventana móvil de las últimas 12 llamadas de cualquier "
-    "método: si más de la mitad de esas llamadas cayeron a respaldo, `source.degraded` se reporta como "
-    "verdadero — visible en `GET /api/meta` para que el frontend (y el equipo) sepan en qué modo está "
+    "método: si más de la mitad de esas llamadas cayeron a respaldo, <code>source.degraded</code> se reporta como "
+    "verdadero — visible en <code>GET /api/meta</code> para que el frontend (y el equipo) sepan en qué modo está "
     "operando el sistema en cada momento."
 ))
 
 story.append(h2("2.2 Adaptadores simulados como ciudadanos de primera clase"))
 story.append(p(
     "Los adaptadores Mock no son solo un recurso de pruebas: son la razón por la que el producto nunca "
-    "se cae por completo. `MockAdapter` responde con un conjunto curado de entidades, oportunidades y "
-    "contratos de ejemplo. `MockEmailAdapter` y `MockWhatsAppAdapter` registran cada envío en "
-    "`data/outbox_emails.json` / `data/outbox_whatsapp.json` en vez de contactar un proveedor real, "
+    "se cae por completo. <code>MockAdapter</code> responde con un conjunto curado de entidades, oportunidades y "
+    "contratos de ejemplo. <code>MockEmailAdapter</code> y <code>MockWhatsAppAdapter</code> registran cada envío en "
+    "<code>data/outbox_emails.json</code> / <code>data/outbox_whatsapp.json</code> en vez de contactar un proveedor real, "
     "y devuelven el código/mensaje generado directamente en la respuesta de la API cuando no hay un "
     "proveedor real configurado — marcado explícitamente como \"modo demo\" en la interfaz."
 ))
@@ -85,7 +85,7 @@ story.append(h1("4. Persistencia"))
 story.append(p(
     "RASTRO es mayormente <i>stateless</i>: la información de contratación se recalcula en cada "
     "consulta contra Croma (con caché de corta duración). Lo que sí necesita sobrevivir a un reinicio "
-    "del proceso se guarda en archivos JSON planos (`src/store/jsonStore.js`), suficiente para el "
+    "del proceso se guarda en archivos JSON planos (<code>src/store/jsonStore.js</code>), suficiente para el "
     "volumen de un hackathon/demo:"
 ))
 story.append(bullets([
@@ -100,11 +100,42 @@ story.append(p(
 
 story.append(h1("5. Despliegue"))
 story.append(p(
-    "Los dos procesos se despliegan y escalan de forma independiente. El backend (`server.js`) corre "
-    "como un proceso Node de larga duración (necesario para mantener viva la conexión MCP persistente "
-    "con Croma y el sondeo periódico de oportunidades). El frontend (`web/`) es una aplicación Next.js "
-    "estándar, desplegable en Vercel, que se comunica con el backend a través de la variable de entorno "
-    "<code>RASTRO_API_URL</code>."
+    "Los dos procesos se despliegan y escalan de forma independiente. El backend (<code>server.js</code>) "
+    "corre como un proceso Node de larga duración (necesario para mantener viva la conexión MCP "
+    "persistente con Croma y el sondeo periódico de oportunidades). El frontend (<code>web/</code>) es "
+    "una aplicación Next.js estándar, desplegable en Vercel, que se comunica con el backend a través de "
+    "la variable de entorno <code>RASTRO_API_URL</code>."
 ))
+
+story.append(h1("6. Apéndice — API REST de RASTRO"))
+story.append(p(
+    "Catálogo completo de los endpoints que expone el backend bajo <code>/api</code>. Todos responden "
+    "JSON; ninguno sirve HTML. Los marcados como protegidos exigen la cabecera "
+    "<code>Authorization: Bearer &lt;token&gt;</code>, con el token emitido por "
+    "<code>POST /api/companies/login/verify</code>. Para el detalle de la arquitectura de la fuente de "
+    "datos externa que consumen estos endpoints, ver el documento \"Arquitectura de la API de Croma\"."
+))
+rows = [
+    ["GET", "/api/meta", "No", "Estado de la fuente de datos, sectores, ubicaciones y entidades semilla"],
+    ["GET", "/api/search?q=", "No", "Búsqueda por NIT, cédula o nombre, con cascada de normalización"],
+    ["GET", "/api/entity/:docType/:doc", "No", "Expediente de riesgo — cruza seis fuentes oficiales en paralelo"],
+    ["GET", "/api/entity/:docType/:doc/summary", "No", "Resumen ejecutivo con inteligencia artificial sobre ese expediente"],
+    ["GET", "/api/contract/:contractId", "No", "Seguimiento financiero, línea de tiempo y señal de alineación de un contrato"],
+    ["GET", "/api/opportunities", "No", "Licitaciones activas. Filtros: sector, location, minValue, maxValue, winners"],
+    ["GET", "/api/concentration/:nit", "No", "Concentración de adjudicaciones recientes de una entidad contratante"],
+    ["POST", "/api/companies/register", "No", "Crea una cuenta de empresa; exige un NIT activo en RUES"],
+    ["POST", "/api/companies/login", "No", "Primer paso del inicio de sesión: valida credenciales y envía un código por correo"],
+    ["POST", "/api/companies/login/verify", "No", "Segundo paso: confirma el código y entrega el token de sesión"],
+    ["GET", "/api/companies/me", "Sí", "Datos de la cuenta autenticada"],
+    ["PUT", "/api/companies/me/subscription", "Sí", "Actualiza las preferencias de alerta"],
+    ["GET", "/api/companies/me/notifications", "Sí", "Historial de alertas enviadas a la cuenta"],
+    ["POST", "/api/companies/me/whatsapp/request-code", "Sí", "Genera y envía un código de verificación de WhatsApp"],
+    ["POST", "/api/companies/me/whatsapp/verify", "Sí", "Confirma el código y marca el número como verificado"],
+    ["POST", "/api/opportunities/poll", "Sí", "Fuerza el sondeo de oportunidades nuevas"],
+    ["GET", "/api/personas/:docType/:doc", "Sí", "Estudio de seguridad de una persona natural por cédula"],
+    ["GET", "/api/personas/:docType/:doc/summary", "Sí", "Resumen ejecutivo con inteligencia artificial sobre ese estudio"],
+]
+story.append(make_table(["Método", "Ruta", "Protegido", "Descripción"], rows,
+                          col_widths=[1.6*cm, 5.6*cm, 1.9*cm, 7.7*cm], small_body=True))
 
 build_pdf("06-Arquitectura-del-Sistema.pdf", "Arquitectura del Sistema", story)
